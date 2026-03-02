@@ -1,7 +1,8 @@
 # SSLCommerz API Documentation Plan
 
 > **Source:** [SSLCommerz Developer Docs v4](https://developer.sslcommerz.com/doc/v4/) | [Main Portal](https://developer.sslcommerz.com/)  
-> **Version:** 4.00 | **Updated:** May 12th, 2019 (with 2025 additions for refund_trans_id)
+> **Version:** 4.00 | **Updated:** May 12th, 2019 (with 2025 additions for refund_trans_id)  
+> **Last verified:** Re-fetched docs Mar 2025 – gaps filled (Easy Checkout, IPN/Validation extra fields, Network IPs, Quick Bank Pay errors)
 
 ---
 
@@ -88,7 +89,7 @@
 | `cus_country`            | string (50)    | ✅        | Country                                                                                                     |
 | `cus_phone`              | string (20)    | ✅        | Phone                                                                                                       |
 | `cus_fax`                | string (20)    |          | Fax                                                                                                         |
-| `multi_card_name`        | string (30)    |          | Gateway list control (e.g. `mastercard,visacard`)                                                           |
+| `multi_card_name`        | string (30)    |          | Gateway list control. Individual: brac_visa, dbbl_visa, city_visa, ebl_visa, sbl_visa, brac_master, dbbl_master, city_master, ebl_master, sbl_master, city_amex, qcash, dbbl_nexus, bankasia, abbank, ibbl, mtbl, bkash, dbblmobilebanking, city, upay, tapnpay. Groups: internetbank, mobilebank, othercard, visacard, mastercard, amexcard |
 | `allowed_bin`            | string (255)   |          | Allowed BINs, comma-separated                                                                               |
 | `emi_option`             | integer (1)    |          | 1/0 – EMI enabled                                                                                           |
 | `emi_max_inst_option`    | integer (2)    |          | Max instalments (e.g. 3,6,9)                                                                                |
@@ -141,14 +142,27 @@
 | `sessionkey`           | string (50)  | Session key              |
 | `gw`                   | object       | Gateway list by category |
 | `GatewayPageURL`       | string (255) | Redirect URL for payment |
-| `redirectGatewayURL`   | string       | Direct gateway URL       |
-| `directPaymentURLBank` | string       | Bank payment URL         |
-| `directPaymentURLCard` | string       | Card payment URL         |
-| `storeBanner`          | string (255) | Store banner URL         |
+| `redirectGatewayURL`       | string       | Direct gateway URL       |
+| `redirectGatewayURLFailed` | string       | Failed redirect URL      |
+| `directPaymentURLBank`     | string       | Bank payment URL         |
+| `directPaymentURLCard`     | string       | Card payment URL         |
+| `directPaymentURL`         | string       | Direct payment URL       |
+| `storeBanner`              | string (255) | Store banner URL         |
 | `storeLogo`            | string (255) | Store logo URL           |
 | `desc`                 | array        | Gateway descriptions     |
 | `is_direct_pay_enable` | string       | 1/0                      |
 
+
+#### Easy Checkout (Pop-up / Embed)
+
+| Property | Value |
+|----------|-------|
+| **Sandbox embed** | `https://sandbox.sslcommerz.com/embed.min.js` |
+| **Live embed** | `https://seamless-epay.sslcommerz.com/embed.min.js` |
+
+**Pop-up button attributes:** `id="sslczPayBtn"`, `token`, `postdata`, `order`, `endpoint` (URL where backend initiates payment to SSLCommerz).
+
+**Cart format (simplified):** `[{"product":"","amount":""},...]` (product + amount only for Easy Checkout).
 
 ---
 
@@ -189,6 +203,9 @@
 | `value_b`                  | string (255)   | Custom value                                       |
 | `value_c`                  | string (255)   | Custom value                                       |
 | `value_d`                  | string (255)   | Custom value                                       |
+| `store_id`                 | string (30)    | Store ID                                           |
+| `currency_rate`            | string         | Currency conversion rate                           |
+| `base_fair`                | string         | Base fair amount                                   |
 | `verify_sign`              | string (255)   | Validation key                                     |
 | `verify_key`               | string         | Validation key                                     |
 | `risk_level`               | integer (1)    | 0 = safe, 1 = risky                                |
@@ -251,9 +268,16 @@
 | `value_a`–`value_d`        | string (255)   | Custom values                           |
 | `risk_level`               | integer (1)    | 0/1                                     |
 | `risk_title`               | string (50)    | Risk description                        |
+| `currency_rate`            | string         | Currency conversion rate                 |
+| `base_fair`                | string         | Base fair amount                         |
+| `emi_description`          | string         | EMI description                          |
+| `emi_issuer`               | string         | EMI issuer                               |
+| `account_details`          | string         | Account details                          |
+| `gw_version`              | string         | Gateway version                          |
 | `APIConnect`               | string         | DONE / etc.                             |
 | `validated_on`             | datetime       | Validation time                         |
 
+**Security check points:** Validate status (VALID/FAILED/CANCELLED); check currency type; validate amount and tran_id against your DB; if `risk_level=1` and status=VALID, hold service and verify customer.
 
 ---
 
@@ -297,6 +321,7 @@
 | `status`        | string (30)  | success / failed / processing              |
 | `errorReason`   | string (255) | Error message                              |
 
+**Security:** Your Public IP must be registered at SSLCOMMERZ Live System for Refund API.
 
 #### 3.4.2 Query Refund Status
 
@@ -348,11 +373,12 @@
 **Request Parameters**
 
 
-| Param          | Data Type   | Required | Description    |
-| -------------- | ----------- | -------- | -------------- |
-| `sessionkey`   | string (50) | ✅        | Session key    |
-| `store_id`     | string (30) | ✅        | Store ID       |
-| `store_passwd` | string (30) | ✅        | Store password |
+| Param          | Data Type   | Required | Description              |
+| -------------- | ----------- | -------- | ------------------------ |
+| `sessionkey`   | string (50) | ✅        | Session key              |
+| `store_id`     | string (30) | ✅        | Store ID                 |
+| `store_passwd` | string (30) | ✅        | Store password           |
+| `format`       | string (10) |          | json / xml (default: json) |
 
 
 **Response Parameters**
@@ -385,7 +411,10 @@
 | `value_a`–`value_d`        | string (255)   | Custom values                        |
 | `risk_level`               | integer (1)    | 0/1                                  |
 | `risk_title`               | string (50)    | Risk description                     |
-| `validated_on`             | datetime       | Validation time                      |
+| `currency_rate`            | string         | Currency conversion rate              |
+| `base_fair`                | string         | Base fair amount                      |
+| `validated_on`             | datetime       | Validation time                       |
+| `gw_version`              | string         | Gateway version                       |
 
 
 #### 3.5.2 By Transaction ID
@@ -400,22 +429,27 @@
 **Request Parameters**
 
 
-| Param          | Data Type   | Required | Description    |
-| -------------- | ----------- | -------- | -------------- |
-| `tran_id`      | string (50) | ✅        | Transaction ID |
-| `store_id`     | string (30) | ✅        | Store ID       |
-| `store_passwd` | string (30) | ✅        | Store password |
+| Param          | Data Type   | Required | Description              |
+| -------------- | ----------- | -------- | ------------------------ |
+| `tran_id`      | string (50) | ✅        | Transaction ID           |
+| `store_id`     | string (30) | ✅        | Store ID                 |
+| `store_passwd` | string (30) | ✅        | Store password           |
+| `format`       | string (10) |          | json / xml (default: json) |
 
 
 **Response Parameters**
 
 
-| Param               | Data Type    | Description                                                |
-| ------------------- | ------------ | ---------------------------------------------------------- |
-| `APIConnect`        | string (30)  | Connection status                                          |
-| `no_of_trans_found` | integer (2)  | Number of transactions                                     |
-| `element`           | array        | Transaction details (same structure as single transaction) |
-| `element.[].error`  | string (255) | Failure reason if any                                      |
+| Param                    | Data Type    | Description                                                |
+| ------------------------ | ------------ | ---------------------------------------------------------- |
+| `APIConnect`             | string (30)  | Connection status                                          |
+| `no_of_trans_found`      | integer (2)  | Number of transactions                                     |
+| `element`                | array        | Transaction details (see below)                            |
+| `element.[].bank_gw`     | string       | Bank gateway name                                          |
+| `element.[].gw_version`  | string       | Gateway version                                            |
+| `element.[].emi_description` | string   | EMI description                                            |
+| `element.[].emi_issuer`  | string       | EMI issuer                                                 |
+| `element.[].error`       | string (255) | Failure reason if any                                      |
 
 
 ---
@@ -851,6 +885,8 @@
 | `payment_approval_id` | string | Approval ID          |
 | `details`             | object | service_type, amount |
 
+**Error response:** `{ "status": "failed", "error_code": "BILL_NOT_FOUND", "message": "..." }`  
+**Status codes:** 200, 400, 404, 500
 
 ---
 
@@ -902,4 +938,28 @@
 - **Live:** securepay.sslcommerz.com (TCP 443)
 - **IPN:** Merchant listener must be reachable from the internet (ports 80/443)
 - **Whitelist:** SSLCommerz IPs may need to be whitelisted
+
+### SSLCommerz IPs (from docs)
+
+| Environment | Outbound (your server → SSLCommerz) | Inbound (SSLCommerz → your IPN) |
+|-------------|-------------------------------------|----------------------------------|
+| **Sandbox** | TCP 443 to 103.26.139.148, 103.132.153.148 | TCP 80/443 from 103.26.139.81, 103.132.153.81 |
+| **Live**    | TCP 443 to 103.26.139.87 | TCP 80/443 from 103.26.139.87 |
+
+---
+
+## 8. Quick Bank Pay – Error & Status Codes
+
+**Error response format:**
+```json
+{
+  "status": "failed",
+  "error_code": "BILL_NOT_FOUND",
+  "message": "No bill available for provided information"
+}
+```
+
+**HTTP status codes:** 200 (Success), 400 (Invalid Request), 404 (Bill Not Found), 500 (Internal Server Error)
+
+**Notes:** Log request/response; use idempotency keys on payment confirmation; validate phone (E.164) and dates client-side.
 
