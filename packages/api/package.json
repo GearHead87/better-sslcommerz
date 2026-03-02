@@ -1,5 +1,5 @@
 {
-  "name": "@acme/api",
+  "name": "@better-sslcommerz/api",
   "private": true,
   "type": "module",
   "exports": {
@@ -18,20 +18,20 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/auth": "workspace:*",
-    "@acme/db": "workspace:*",
-    "@acme/validators": "workspace:*",
+    "@better-sslcommerz/auth": "workspace:*",
+    "@better-sslcommerz/db": "workspace:*",
+    "@better-sslcommerz/validators": "workspace:*",
     "@trpc/server": "catalog:",
     "superjson": "2.2.3",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@better-sslcommerz/eslint-config": "workspace:*",
+    "@better-sslcommerz/prettier-config": "workspace:*",
+    "@better-sslcommerz/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@better-sslcommerz/prettier-config"
 }

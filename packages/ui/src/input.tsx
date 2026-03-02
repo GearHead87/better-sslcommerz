@@ -1,4 +1,4 @@
-import { cn } from "@acme/ui";
+import { cn } from "@better-sslcommerz/ui";
 
 export function Input({
   className,

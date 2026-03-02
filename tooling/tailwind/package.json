@@ -1,5 +1,5 @@
 {
-  "name": "@acme/tailwind-config",
+  "name": "@better-sslcommerz/tailwind-config",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,13 +19,13 @@
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@better-sslcommerz/eslint-config": "workspace:*",
+    "@better-sslcommerz/prettier-config": "workspace:*",
+    "@better-sslcommerz/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@better-sslcommerz/prettier-config"
 }

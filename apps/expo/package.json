@@ -1,5 +1,5 @@
 {
-  "name": "@acme/expo",
+  "name": "@better-sslcommerz/expo",
   "private": true,
   "main": "index.ts",
   "scripts": {
@@ -44,16 +44,16 @@
     "superjson": "2.2.3"
   },
   "devDependencies": {
-    "@acme/api": "workspace:*",
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@better-sslcommerz/api": "workspace:*",
+    "@better-sslcommerz/eslint-config": "workspace:*",
+    "@better-sslcommerz/prettier-config": "workspace:*",
+    "@better-sslcommerz/tailwind-config": "workspace:*",
+    "@better-sslcommerz/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@better-sslcommerz/prettier-config"
 }

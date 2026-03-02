@@ -1,5 +1,5 @@
 {
-  "name": "@acme/validators",
+  "name": "@better-sslcommerz/validators",
   "private": true,
   "type": "module",
   "exports": {
@@ -21,12 +21,12 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@better-sslcommerz/eslint-config": "workspace:*",
+    "@better-sslcommerz/prettier-config": "workspace:*",
+    "@better-sslcommerz/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@better-sslcommerz/prettier-config"
 }

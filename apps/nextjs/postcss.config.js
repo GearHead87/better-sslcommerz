@@ -1,1 +1,1 @@
-export { default } from "@acme/tailwind-config/postcss-config";
+export { default } from "@better-sslcommerz/tailwind-config/postcss-config";
