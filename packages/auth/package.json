@@ -17,17 +17,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-sslcommerz/db": "workspace:*",
     "@better-auth/expo": "catalog:",
+    "@better-sslcommerz/db": "workspace:*",
     "@t3-oss/env-core": "^0.13.8",
     "better-auth": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@better-auth/cli": "catalog:",
     "@better-sslcommerz/eslint-config": "workspace:*",
     "@better-sslcommerz/prettier-config": "workspace:*",
     "@better-sslcommerz/tsconfig": "workspace:*",
-    "@better-auth/cli": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"

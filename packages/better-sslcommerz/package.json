@@ -1,89 +1,48 @@
 {
-  "name": "uploadthing",
-  "version": "7.7.4",
+  "name": "@better-sslcommerz/better-sslcommerz",
+  "version": "0.0.0",
   "type": "module",
   "sideEffects": false,
-  "engines": {
-    "node": ">=18.13.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "github:pingdotgg/uploadthing",
-    "directory": "packages/uploadthing"
-  },
   "license": "MIT",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
-    
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    }
   },
   "files": [
-
+    "dist"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "lint": "eslint src test --max-warnings 0",
-    "build": "tsdown",
-    "clean": "git clean -xdf client express fastify h3 internal next next-legacy server tw node_modules",
+    "build": "tsdown && tsc -p tsconfig.build.json",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsdown --no-clean",
-    "prepack": "bun ../../.github/replace-workspace-protocol.ts",
-    "test": "vitest run",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@effect/platform": "0.90.3",
-    "@standard-schema/spec": "1.0.0-beta.4",
-    "@uploadthing/mime-types": "workspace:*",
-    "@uploadthing/shared": "workspace:*",
-    "effect": "3.17.7"
-  },
   "devDependencies": {
-    "@effect/vitest": "0.25.1",
-    "@remix-run/server-runtime": "^2.12.0",
-    "@types/body-parser": "^1.19.5",
-    "@types/express": "^5.0.0",
-    "@types/express-serve-static-core": "^5.0.3",
-    "@types/react": "19.2.7",
-    "@uploadthing/eslint-config": "workspace:*",
-    "@uploadthing/tsconfig": "workspace:*",
-    "@uploadthing/vitest-config": "workspace:*",
-    "@vitest/coverage-istanbul": "3.2.4",
-    "body-parser": "^1.20.2",
-    "eslint": "9.25.1",
-    "express": "^5.0.1",
-    "fastify": "^5.2.0",
-    "h3": "^1.13.0",
-    "msw": "2.7.5",
-    "next": "15.5.8",
-    "solid-js": "^1.9.3",
-    "tailwindcss": "^3.4.16",
+    "@better-sslcommerz/eslint-config": "workspace:*",
+    "@better-sslcommerz/prettier-config": "workspace:*",
+    "@better-sslcommerz/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "tsdown": "0.14.1",
-    "typescript": "5.8.3",
-    "valibot": "1.0.0-beta.9",
-    "vitest": "3.2.4",
-    "vue": "^3.4.21",
-    "wait-on": "^8.0.1",
-    "zod": "^3.24.1"
+    "typescript": "catalog:"
   },
-  "peerDependencies": {
-    "express": "*"
-  },
-  "peerDependenciesMeta": {
-    "next": {
-      "optional": true
-    },
-    "express": {
-      "optional": true
-    },
-    "fastify": {
-      "optional": true
-    },
-    "h3": {
-      "optional": true
-    },
-    "tailwindcss": {
-      "optional": true
-    }
-  }
+  "prettier": "@better-sslcommerz/prettier-config"
 }
