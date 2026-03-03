@@ -1,0 +1,29 @@
+import { blogMetadata } from "@/lib/utils";
+
+export const article = {
+  title: "Better SSLCommerz Docs Are Live",
+  description:
+    "We launched a new docs app powered by Next.js and MDX for faster updates and better discoverability.",
+  date: "2026-03-03",
+  tags: ["announcement", "docs"],
+  authors: [{ name: "Team Better SSLCommerz", role: "Maintainers" }],
+  image: "",
+};
+
+export const metadata = blogMetadata(article);
+
+# Better SSLCommerz Docs Are Live
+
+We now have a dedicated docs app with:
+
+- MDX-powered content pages
+- A docs sidebar and page-level table of contents
+- Blog posts with structured metadata
+
+## Why we moved to MDX
+
+MDX gives us a clean authoring workflow while keeping React component composability.
+
+## What is next
+
+We will gradually publish API reference pages and framework-specific integration guides.

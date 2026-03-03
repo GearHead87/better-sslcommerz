@@ -1,0 +1,32 @@
+import { blogMetadata } from "@/lib/utils";
+
+export const article = {
+  title: "Integration Checklist for Production",
+  description:
+    "A short checklist to safely move your Better SSLCommerz payment flow from development to production.",
+  date: "2026-03-02",
+  tags: ["guide", "production"],
+  authors: [{ name: "Team Better SSLCommerz", role: "Maintainers" }],
+  image: "",
+};
+
+export const metadata = blogMetadata(article);
+
+# Integration Checklist for Production
+
+Before going live, confirm each item below.
+
+## Environment and credentials
+
+- Store merchant credentials in server-only environment variables.
+- Keep callback URLs consistent between dashboard and deployment.
+
+## Transaction flow
+
+- Validate every callback payload.
+- Reconcile status using backend verification before marking payment complete.
+
+## Monitoring
+
+- Log transaction IDs and statuses.
+- Add alerting for callback failures and signature mismatch events.

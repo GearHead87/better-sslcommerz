@@ -1,0 +1,31 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Getting Started",
+  category: "Guides",
+  description:
+    "Install the package, add environment values, and initialize Better SSLCommerz in your app.",
+});
+
+# Getting Started
+
+This page shows the quickest path to set up Better SSLCommerz.
+
+## Installation
+
+```bash
+pnpm add @better-sslcommerz/better-sslcommerz
+```
+
+## Basic setup
+
+Create your payment client, then call it from a server route.
+
+```ts
+import "@better-sslcommerz/better-sslcommerz";
+```
+
+## Next steps
+
+- Add callback endpoints for success and fail URLs.
+- Verify signatures using the server-side helper utilities.
