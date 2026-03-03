@@ -1,8 +1,8 @@
 # SSLCommerz API Documentation Plan
 
-> **Source:** [SSLCommerz Developer Docs v4](https://developer.sslcommerz.com/doc/v4/) | [Main Portal](https://developer.sslcommerz.com/)  
+> **Source:** [SSLCommerz Developer Docs v4](https://developer.sslcommerz.com/doc/v4/) | [Google Pay Integration](https://developer.sslcommerz.com/doc/v4/google-pay-integration.html) | [Invoice API](https://developer.sslcommerz.com/doc/v4/invoice.html) | [Main Portal](https://developer.sslcommerz.com/)  
 > **Version:** 4.00 | **Updated:** May 12th, 2019 (with 2025 additions for refund_trans_id)  
-> **Last verified:** Re-fetched docs Mar 2025 – gaps filled (Easy Checkout, IPN/Validation extra fields, Network IPs, Quick Bank Pay errors)
+> **Last verified:** Re-fetched docs Mar 2026 – tables aligned to current docs (IPN/Validation/Query fields, refund query params, shipping/vertical conditionals, Google Pay response)
 
 ---
 
@@ -84,7 +84,7 @@
 | `cus_fax`                | string (20)    |             | Fax                                                                                                                                                                                                                                                                                                                                          |
 | `multi_card_name`        | string (30)    |             | Gateway list control. Individual: brac_visa, dbbl_visa, city_visa, ebl_visa, sbl_visa, brac_master, dbbl_master, city_master, ebl_master, sbl_master, city_amex, qcash, dbbl_nexus, bankasia, abbank, ibbl, mtbl, bkash, dbblmobilebanking, city, upay, tapnpay. Groups: internetbank, mobilebank, othercard, visacard, mastercard, amexcard |
 | `allowed_bin`            | string (255)   |             | Allowed BINs, comma-separated                                                                                                                                                                                                                                                                                                                |
-| `emi_option`             | integer (1)    |             | 1/0 – EMI enabled                                                                                                                                                                                                                                                                                                                            |
+| `emi_option`             | integer (1)    | Conditional | 1/0 – EMI enabled (required if EMI is enabled)                                                                                                                                                                                                                                                                                               |
 | `emi_max_inst_option`    | integer (2)    |             | Max instalments (e.g. 3,6,9)                                                                                                                                                                                                                                                                                                                 |
 | `emi_selected_inst`      | integer (2)    |             | Pre-selected instalment                                                                                                                                                                                                                                                                                                                      |
 | `emi_allow_only`         | integer (1)    |             | 1 = EMI only                                                                                                                                                                                                                                                                                                                                 |
@@ -190,13 +190,14 @@
 | `value_b`                  | string (255)   | Custom value                                       |
 | `value_c`                  | string (255)   | Custom value                                       |
 | `value_d`                  | string (255)   | Custom value                                       |
-| `store_id`                 | string (30)    | Store ID                                           |
 | `currency_rate`            | string         | Currency conversion rate                           |
 | `base_fair`                | string         | Base fair amount                                   |
+| `store_id`                 | string (30)    | Store ID                                           |
 | `verify_sign`              | string (255)   | Validation key                                     |
 | `verify_key`               | string         | Validation key                                     |
 | `risk_level`               | integer (1)    | 0 = safe, 1 = risky                                |
 | `risk_title`               | string (50)    | Risk description                                   |
+| `cus_fax`                  | string (20)    | Fax (may be present in IPN payload)                |
 
 ---
 
@@ -285,6 +286,7 @@
 | `refund_remarks`  | string (255)   | ✅       | Refund reason                                      |
 | `refe_id`         | string (50)    |          | Reference ID                                       |
 | `format`          | string (10)    |          | json / xml                                         |
+| `v`               | integer (1)    |          | Optional (seen in request example)                 |
 
 **Response Parameters**
 
@@ -308,11 +310,12 @@
 
 **Request Parameters**
 
-| Param           | Data Type   | Required | Description         |
-| --------------- | ----------- | -------- | ------------------- |
-| `refund_ref_id` | string (50) | ✅       | Refund reference ID |
-| `store_id`      | string (30) | ✅       | Store ID            |
-| `store_passwd`  | string (30) | ✅       | Store password      |
+| Param           | Data Type   | Required | Description                          |
+| --------------- | ----------- | -------- | ------------------------------------ |
+| `refund_ref_id` | string (50) | ✅       | Refund reference ID                  |
+| `store_id`      | string (30) | ✅       | Store ID                             |
+| `store_passwd`  | string (30) | ✅       | Store password                       |
+| `format`        | string (10) |          | json / xml (seen in request example) |
 
 **Response Parameters**
 
@@ -399,16 +402,45 @@
 
 **Response Parameters**
 
-| Param                        | Data Type    | Description                     |
-| ---------------------------- | ------------ | ------------------------------- |
-| `APIConnect`                 | string (30)  | Connection status               |
-| `no_of_trans_found`          | integer (2)  | Number of transactions          |
-| `element`                    | array        | Transaction details (see below) |
-| `element.[].bank_gw`         | string       | Bank gateway name               |
-| `element.[].gw_version`      | string       | Gateway version                 |
-| `element.[].emi_description` | string       | EMI description                 |
-| `element.[].emi_issuer`      | string       | EMI issuer                      |
-| `element.[].error`           | string (255) | Failure reason if any           |
+| Param                                 | Data Type    | Description                     |
+| ------------------------------------- | ------------ | ------------------------------- |
+| `APIConnect`                          | string (30)  | Connection status               |
+| `no_of_trans_found`                   | integer (2)  | Number of transactions          |
+| `element`                             | array        | Transaction details (see below) |
+| `element.[].status`                   | string       | Transaction status              |
+| `element.[].tran_date`                | datetime     | Transaction date                |
+| `element.[].tran_id`                  | string       | Transaction ID                  |
+| `element.[].val_id`                   | string       | Validation ID                   |
+| `element.[].amount`                   | decimal      | Amount                          |
+| `element.[].store_amount`             | decimal      | Net amount                      |
+| `element.[].card_type`                | string       | Gateway                         |
+| `element.[].card_no`                  | string       | Card/reference                  |
+| `element.[].currency`                 | string       | Currency                        |
+| `element.[].bank_tran_id`             | string       | Bank transaction ID             |
+| `element.[].card_issuer`              | string       | Issuer                          |
+| `element.[].card_brand`               | string       | Card brand                      |
+| `element.[].card_issuer_country`      | string       | Issuer country                  |
+| `element.[].card_issuer_country_code` | string       | Issuer country code             |
+| `element.[].currency_type`            | string       | Original currency               |
+| `element.[].currency_amount`          | decimal      | Original amount                 |
+| `element.[].emi_instalment`           | integer      | EMI tenure                      |
+| `element.[].emi_amount`               | decimal      | EMI amount                      |
+| `element.[].discount_percentage`      | decimal      | Discount %                      |
+| `element.[].discount_remarks`         | string       | Discount notes                  |
+| `element.[].value_a`                  | string       | Custom value                    |
+| `element.[].value_b`                  | string       | Custom value                    |
+| `element.[].value_c`                  | string       | Custom value                    |
+| `element.[].value_d`                  | string       | Custom value                    |
+| `element.[].risk_level`               | integer      | Risk level                      |
+| `element.[].risk_title`               | string       | Risk description                |
+| `element.[].currency_rate`            | string       | Currency conversion rate        |
+| `element.[].base_fair`                | string       | Base fair amount                |
+| `element.[].bank_gw`                  | string       | Bank gateway name               |
+| `element.[].gw_version`               | string       | Gateway version                 |
+| `element.[].emi_description`          | string       | EMI description                 |
+| `element.[].emi_issuer`               | string       | EMI issuer                      |
+| `element.[].validated_on`             | datetime     | Validation time                 |
+| `element.[].error`                    | string (255) | Failure reason if any           |
 
 ---
 
@@ -425,52 +457,64 @@
 
 **Request Parameters**
 
-| Param                  | Data Type      | Required | Description                                   |
-| ---------------------- | -------------- | -------- | --------------------------------------------- |
-| `store_id`             | string (30)    | ✅       | Store ID                                      |
-| `store_passwd`         | string (30)    | ✅       | Store password                                |
-| `refer`                | string (30)    | ✅       | Reference from panel (sandbox: 5B1F9DE4D82B6) |
-| `total_amount`         | decimal (10,2) | ✅       | Amount                                        |
-| `currency`             | string (3)     | ✅       | Currency                                      |
-| `tran_id`              | string (30)    | ✅       | Transaction ID                                |
-| `acct_no`              | string (50)    | ✅       | Invoice/reference ID                          |
-| `product_category`     | string (50)    | ✅       | Product category                              |
-| `cus_name`             | string (50)    | ✅       | Customer name                                 |
-| `cus_email`            | string (50)    | ✅       | Customer email                                |
-| `cus_add1`             | string (50)    | ✅       | Address                                       |
-| `cus_add2`             | string (50)    |          | Address 2                                     |
-| `cus_city`             | string (50)    | ✅       | City                                          |
-| `cus_state`            | string (50)    |          | State                                         |
-| `cus_postcode`         | string (30)    | ✅       | Postcode                                      |
-| `cus_country`          | string (50)    | ✅       | Country                                       |
-| `cus_phone`            | string (20)    | ✅       | Phone                                         |
-| `cus_fax`              | string (20)    |          | Fax                                           |
-| `shipping_method`      | string (50)    | ✅       | YES / NO / Courier                            |
-| `num_of_item`          | integer (1)    | ✅       | Number of items                               |
-| `ship_name`            | string (50)    |          | Shipping name                                 |
-| `ship_add1`            | string (50)    |          | Shipping address                              |
-| `ship_add2`            | string (50)    |          | Shipping address 2                            |
-| `ship_city`            | string (50)    |          | Shipping city                                 |
-| `ship_state`           | string (50)    |          | Shipping state                                |
-| `ship_postcode`        | string (50)    |          | Shipping postcode                             |
-| `ship_country`         | string (50)    |          | Shipping country                              |
-| `product_name`         | string (255)   | ✅       | Product name                                  |
-| `product_category`     | string (100)   | ✅       | Product category                              |
-| `product_profile`      | string (100)   |          | Product profile                               |
-| `cart`                 | json           |          | Cart items                                    |
-| `product_amount`       | decimal (10,2) |          | Product amount                                |
-| `vat`                  | decimal (10,2) |          | VAT                                           |
-| `discount_amount`      | decimal (10,2) |          | Discount                                      |
-| `convenience_fee`      | decimal (10,2) |          | Convenience fee                               |
-| `is_bangla_qr_enabled` | string (3)     |          | YES / NO                                      |
-| `is_sent_email`        | string (3)     |          | yes / no                                      |
-| `is_sent_sms`          | string (3)     |          | yes / no                                      |
-| `ipn_url`              | string (255)   |          | IPN URL                                       |
-| `emi_option`           | integer (1)    |          | EMI 1/0                                       |
-| `emi_max_inst_option`  | integer (2)    |          | Max instalments                               |
-| `emi_selected_inst`    | integer (2)    |          | Selected instalment                           |
-| `emi_allow_only`       | integer (1)    |          | EMI only 1/0                                  |
-| `value_a`–`value_d`    | string (255)   |          | Custom values                                 |
+| Param                  | Data Type      | Required    | Description                                         |
+| ---------------------- | -------------- | ----------- | --------------------------------------------------- |
+| `store_id`             | string (30)    | ✅          | Store ID                                            |
+| `store_passwd`         | string (30)    | ✅          | Store password                                      |
+| `refer`                | string (30)    | ✅          | Reference from panel (sandbox: 5B1F9DE4D82B6)       |
+| `total_amount`         | decimal (10,2) | ✅          | Amount                                              |
+| `currency`             | string (3)     | ✅          | Currency                                            |
+| `tran_id`              | string (30)    | ✅          | Transaction ID                                      |
+| `acct_no`              | string (50)    | ✅          | Invoice/reference ID                                |
+| `product_category`     | string (50)    | ✅          | Product category                                    |
+| `cus_name`             | string (50)    | ✅          | Customer name                                       |
+| `cus_email`            | string (50)    | ✅          | Customer email                                      |
+| `cus_add1`             | string (50)    | ✅          | Address                                             |
+| `cus_add2`             | string (50)    |             | Address 2                                           |
+| `cus_city`             | string (50)    | ✅          | City                                                |
+| `cus_state`            | string (50)    |             | State                                               |
+| `cus_postcode`         | string (30)    | ✅          | Postcode                                            |
+| `cus_country`          | string (50)    | ✅          | Country                                             |
+| `cus_phone`            | string (20)    | ✅          | Phone                                               |
+| `cus_fax`              | string (20)    |             | Fax                                                 |
+| `shipping_method`      | string (50)    | ✅          | YES / NO / Courier                                  |
+| `num_of_item`          | integer (1)    | ✅          | Number of items (required if shipping_method=YES)   |
+| `ship_name`            | string (50)    | Conditional | Shipping name (required if shipping_method=YES)     |
+| `ship_add1`            | string (50)    | Conditional | Shipping address (required if shipping_method=YES)  |
+| `ship_add2`            | string (50)    |             | Shipping address 2                                  |
+| `ship_city`            | string (50)    | Conditional | Shipping city (required if shipping_method=YES)     |
+| `ship_state`           | string (50)    |             | Shipping state                                      |
+| `ship_postcode`        | string (50)    | Conditional | Shipping postcode (required if shipping_method=YES) |
+| `ship_country`         | string (50)    | Conditional | Shipping country (required if shipping_method=YES)  |
+| `product_name`         | string (255)   | ✅          | Product name                                        |
+| `product_category`     | string (100)   | ✅          | Product category                                    |
+| `product_profile`      | string (100)   | ✅          | Product profile                                     |
+| `hours_till_departure` | string (30)    | Conditional | Required if product_profile=airline-tickets         |
+| `flight_type`          | string (30)    | Conditional | Required if product_profile=airline-tickets         |
+| `pnr`                  | string (50)    | Conditional | Required if product_profile=airline-tickets         |
+| `journey_from_to`      | string (255)   | Conditional | Required if product_profile=airline-tickets         |
+| `third_party_booking`  | string (20)    | Conditional | Required if product_profile=airline-tickets         |
+| `hotel_name`           | string (255)   | Conditional | Required if product_profile=travel-vertical         |
+| `length_of_stay`       | string (30)    | Conditional | Required if product_profile=travel-vertical         |
+| `check_in_time`        | string (30)    | Conditional | Required if product_profile=travel-vertical         |
+| `hotel_city`           | string (50)    | Conditional | Required if product_profile=travel-vertical         |
+| `product_type`         | string (30)    | Conditional | Required if product_profile=telecom-vertical        |
+| `topup_number`         | string (150)   | Conditional | Required if product_profile=telecom-vertical        |
+| `country_topup`        | string (30)    | Conditional | Required if product_profile=telecom-vertical        |
+| `cart`                 | json           |             | Cart items                                          |
+| `product_amount`       | decimal (10,2) |             | Product amount                                      |
+| `vat`                  | decimal (10,2) |             | VAT                                                 |
+| `discount_amount`      | decimal (10,2) |             | Discount                                            |
+| `convenience_fee`      | decimal (10,2) |             | Convenience fee                                     |
+| `is_bangla_qr_enabled` | string (3)     |             | YES / NO                                            |
+| `is_sent_email`        | string (3)     |             | yes / no                                            |
+| `is_sent_sms`          | string (3)     |             | yes / no                                            |
+| `ipn_url`              | string (255)   |             | IPN URL                                             |
+| `emi_option`           | integer (1)    | Conditional | EMI 1/0 (required if EMI is enabled)                |
+| `emi_max_inst_option`  | integer (2)    |             | Max instalments                                     |
+| `emi_selected_inst`    | integer (2)    |             | Selected instalment                                 |
+| `emi_allow_only`       | integer (1)    |             | EMI only 1/0                                        |
+| `value_a`–`value_d`    | string (255)   |             | Custom values                                       |
 
 **Response Parameters**
 
@@ -586,63 +630,74 @@
 
 **Request Parameters**
 
-| Param                  | Data Type              | Required    | Description                                    |
-| ---------------------- | ---------------------- | ----------- | ---------------------------------------------- |
-| `action`               | string                 | ✅          | `initiateTransaction`                          |
-| `store_id`             | string (30)            | ✅          | Store ID                                       |
-| `store_passwd`         | string (30)            | ✅          | Store password                                 |
-| `user_refer`           | string (256) encrypted | Conditional | Required unless `enable_cus_googlepay=1`       |
-| `total_amount`         | decimal (10,2)         | ✅          | Amount                                         |
-| `currency`             | string (3)             | ✅          | Currency                                       |
-| `tran_id`              | string (30)            | ✅          | Transaction ID                                 |
-| `success_url`          | string (255)           | ✅          | Success URL                                    |
-| `fail_url`             | string (255)           | ✅          | Fail URL                                       |
-| `cancel_url`           | string (255)           | ✅          | Cancel URL                                     |
-| `ipn_url`              | string (255)           |             | IPN URL                                        |
-| `cus_name`             | string (50)            | ✅          | Customer name                                  |
-| `cus_email`            | string (50)            | ✅          | Customer email                                 |
-| `cus_add1`             | string (50)            | ✅          | Address                                        |
-| `cus_add2`             | string (50)            |             | Address 2                                      |
-| `cus_city`             | string (50)            | ✅          | City                                           |
-| `cus_postcode`         | string (30)            | ✅          | Postcode                                       |
-| `cus_country`          | string (50)            | ✅          | Country                                        |
-| `cus_phone`            | string (50)            | ✅          | Phone                                          |
-| `cus_state`            | string (20)            |             | State                                          |
-| `cus_fax`              | string (20)            |             | Fax                                            |
-| `shipping_method`      | string (50)            | ✅          | YES / NO / Courier                             |
-| `num_of_item`          | integer (1)            |             | Number of items                                |
-| `ship_name`            | string (50)            |             | Shipping name                                  |
-| `ship_add1`            | string (50)            |             | Shipping address                               |
-| `ship_add2`            | string (50)            |             | Shipping address 2                             |
-| `ship_city`            | string (50)            |             | Shipping city                                  |
-| `ship_state`           | string (50)            |             | Shipping state                                 |
-| `ship_postcode`        | string (50)            |             | Shipping postcode                              |
-| `ship_country`         | string (50)            |             | Shipping country                               |
-| `product_name`         | string (255)           | ✅          | Product name                                   |
-| `product_category`     | string (100)           | ✅          | Product category                               |
-| `product_profile`      | string (100)           | ✅          | Product profile                                |
-| `product_type`         | string (30)            |             | Prepaid/Postpaid (telecom)                     |
-| `topup_number`         | string (150)           |             | Mobile number(s) (telecom)                     |
-| `country_topup`        | string (30)            |             | Country (telecom)                              |
-| `cart`                 | json                   |             | Cart items                                     |
-| `product_amount`       | decimal (10,2)         |             | Product amount                                 |
-| `vat`                  | decimal (10,2)         |             | VAT                                            |
-| `discount_amount`      | decimal (10,2)         |             | Discount                                       |
-| `convenience_fee`      | decimal (10,2)         |             | Convenience fee                                |
-| `value_a`–`value_d`    | string (255)           |             | Custom values                                  |
-| `disallowed_bin`       | string                 |             | Disallowed BINs                                |
-| `disallowed_bin_msg`   | string                 |             | Message for disallowed BIN                     |
-| `allowed_bin`          | string (255)           |             | Allowed BINs                                   |
-| `allowed_bin_msg`      | string                 |             | Message for allowed BIN                        |
-| `enable_cus_googlepay` | boolean                |             | 1 = show Google Pay, makes user_refer optional |
+| Param                  | Data Type              | Required    | Description                                         |
+| ---------------------- | ---------------------- | ----------- | --------------------------------------------------- |
+| `action`               | string                 | ✅          | `initiateTransaction`                               |
+| `store_id`             | string (30)            | ✅          | Store ID                                            |
+| `store_passwd`         | string (30)            | ✅          | Store password                                      |
+| `user_refer`           | string (256) encrypted | Conditional | Required unless `enable_cus_googlepay=1`            |
+| `total_amount`         | decimal (10,2)         | ✅          | Amount                                              |
+| `currency`             | string (3)             | ✅          | Currency                                            |
+| `tran_id`              | string (30)            | ✅          | Transaction ID                                      |
+| `success_url`          | string (255)           | ✅          | Success URL                                         |
+| `fail_url`             | string (255)           | ✅          | Fail URL                                            |
+| `cancel_url`           | string (255)           | ✅          | Cancel URL                                          |
+| `ipn_url`              | string (255)           |             | IPN URL                                             |
+| `cus_name`             | string (50)            | ✅          | Customer name                                       |
+| `cus_email`            | string (50)            | ✅          | Customer email                                      |
+| `cus_add1`             | string (50)            | ✅          | Address                                             |
+| `cus_add2`             | string (50)            |             | Address 2                                           |
+| `cus_city`             | string (50)            | ✅          | City                                                |
+| `cus_postcode`         | string (30)            | ✅          | Postcode                                            |
+| `cus_country`          | string (50)            | ✅          | Country                                             |
+| `cus_phone`            | string (50)            | ✅          | Phone                                               |
+| `cus_state`            | string (20)            |             | State                                               |
+| `cus_fax`              | string (20)            |             | Fax                                                 |
+| `shipping_method`      | string (50)            | ✅          | YES / NO / Courier                                  |
+| `num_of_item`          | integer (1)            | Conditional | Required if shipping_method=YES                     |
+| `ship_name`            | string (50)            | Conditional | Shipping name (required if shipping_method=YES)     |
+| `ship_add1`            | string (50)            | Conditional | Shipping address (required if shipping_method=YES)  |
+| `ship_add2`            | string (50)            |             | Shipping address 2                                  |
+| `ship_city`            | string (50)            | Conditional | Shipping city (required if shipping_method=YES)     |
+| `ship_state`           | string (50)            |             | Shipping state                                      |
+| `ship_postcode`        | string (50)            | Conditional | Shipping postcode (required if shipping_method=YES) |
+| `ship_country`         | string (50)            | Conditional | Shipping country (required if shipping_method=YES)  |
+| `product_name`         | string (255)           | ✅          | Product name                                        |
+| `product_category`     | string (100)           | ✅          | Product category                                    |
+| `product_profile`      | string (100)           | ✅          | Product profile                                     |
+| `hours_till_departure` | string (30)            | Conditional | Required if product_profile=airline-tickets         |
+| `flight_type`          | string (30)            | Conditional | Required if product_profile=airline-tickets         |
+| `pnr`                  | string (50)            | Conditional | Required if product_profile=airline-tickets         |
+| `journey_from_to`      | string (255)           | Conditional | Required if product_profile=airline-tickets         |
+| `third_party_booking`  | string (20)            | Conditional | Required if product_profile=airline-tickets         |
+| `hotel_name`           | string (255)           | Conditional | Required if product_profile=travel-vertical         |
+| `length_of_stay`       | string (30)            | Conditional | Required if product_profile=travel-vertical         |
+| `check_in_time`        | string (30)            | Conditional | Required if product_profile=travel-vertical         |
+| `hotel_city`           | string (50)            | Conditional | Required if product_profile=travel-vertical         |
+| `product_type`         | string (30)            | Conditional | Required if product_profile=telecom-vertical        |
+| `topup_number`         | string (150)           | Conditional | Required if product_profile=telecom-vertical        |
+| `country_topup`        | string (30)            | Conditional | Required if product_profile=telecom-vertical        |
+| `cart`                 | json                   |             | Cart items                                          |
+| `product_amount`       | decimal (10,2)         |             | Product amount                                      |
+| `vat`                  | decimal (10,2)         |             | VAT                                                 |
+| `discount_amount`      | decimal (10,2)         |             | Discount                                            |
+| `convenience_fee`      | decimal (10,2)         |             | Convenience fee                                     |
+| `value_a`–`value_d`    | string (255)           |             | Custom values                                       |
+| `disallowed_bin`       | string                 |             | Disallowed BINs                                     |
+| `disallowed_bin_msg`   | string                 |             | Message for disallowed BIN                          |
+| `allowed_bin`          | string (255)           |             | Allowed BINs                                        |
+| `allowed_bin_msg`      | string                 |             | Message for allowed BIN                             |
+| `enable_cus_googlepay` | boolean                |             | 1 = show Google Pay, makes user_refer optional      |
 
 **Response Parameters**
 
-| Param         | Data Type | Description                                                                                                     |
-| ------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
-| `APIConnect`  | string    | Connection status                                                                                               |
-| `status_code` | number    | HTTP code                                                                                                       |
-| `data`        | object    | `sessionkey`, `redirectGatewayURL`, `googlepay` (totalPrice, currencyCode, countryCode, session_key, actionurl) |
+| Param             | Data Type | Description                                                                                                     |
+| ----------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
+| `APIConnect`      | string    | Connection status                                                                                               |
+| `status_code`     | number    | HTTP code                                                                                                       |
+| `status_sub_code` | number    | Sub HTTP code                                                                                                   |
+| `failed_reason`   | object    | Failure details                                                                                                 |
+| `data`            | object    | `sessionkey`, `redirectGatewayURL`, `googlepay` (totalPrice, currencyCode, countryCode, session_key, actionurl) |
 
 #### 3.7.3 Process Google Pay Token
 
