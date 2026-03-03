@@ -1,48 +1,63 @@
-import { createSslcommerzClient } from "@better-sslcommerz/better-sslcommerz";
-import Link from "next/link";
+import { products } from "@/lib/products";
 
 export default function HomePage() {
-  const demoClient = createSslcommerzClient({
-    storeId: "demo",
-    storePasswd: "demo",
-    environment: "sandbox",
-  });
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-          Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-        </h1>
-        <p className="text-lg text-white/80">
-          Sandbox base URL:{" "}
-          <span className="font-mono text-white">{demoClient.baseUrl}</span>
-        </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/usage/first-steps"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">First Steps →</h3>
-            <div className="text-lg">
-              Just the basics - Everything you need to know to set up your
-              database and authentication.
-            </div>
-          </Link>
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/introduction"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">Documentation →</h3>
-            <div className="text-lg">
-              Learn more about Create T3 App, the libraries it uses, and how to
-              deploy it.
-            </div>
-          </Link>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
+        <header className="flex flex-col gap-4">
+          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
+            SSLCommerz Demo Store
+          </p>
+          <h1 className="text-4xl font-semibold leading-tight md:text-6xl">
+            Pick a product to run a live checkout session.
+          </h1>
+          <p className="max-w-2xl text-lg text-slate-300">
+            Each product creates a new SSLCommerz payment session and redirects
+            you to the hosted gateway. The callbacks and IPN route validate the
+            payment and log the payload.
+          </p>
+        </header>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {products.map((product) => (
+            <article
+              key={product.id}
+              className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6"
+            >
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                    {product.category}
+                  </p>
+                  <h2 className="mt-3 text-2xl font-semibold">
+                    {product.name}
+                  </h2>
+                  <p className="mt-3 text-sm text-slate-300">
+                    {product.description}
+                  </p>
+                </div>
+                <span className="rounded-full border border-slate-700 px-3 py-1 text-sm text-slate-200">
+                  BDT {product.price.toFixed(2)}
+                </span>
+              </div>
+
+              <form
+                className="mt-6"
+                action="/api/sslcommerz/session"
+                method="post"
+              >
+                <input type="hidden" name="productId" value={product.id} />
+                <button
+                  className="w-full rounded-full bg-emerald-400 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-emerald-300"
+                  type="submit"
+                >
+                  Start checkout
+                </button>
+              </form>
+            </article>
+          ))}
         </div>
-      </div>
+      </section>
     </main>
   );
 }

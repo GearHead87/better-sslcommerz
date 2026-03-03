@@ -8,6 +8,16 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
+    SSLCOMMERZ_ENVIRONMENT: z.enum(["sandbox", "live"]).default("sandbox"),
+    SSLCOMMERZ_STORE_ID: z.string().min(1, "SSLCOMMERZ_STORE_ID is required"),
+    SSLCOMMERZ_STORE_PASSWD: z
+      .string()
+      .min(1, "SSLCOMMERZ_STORE_PASSWD is required"),
+    SSLCOMMERZ_VALIDATE_RESPONSE: z
+      .string()
+      .optional()
+      .transform((value) => value === "true"),
+    APP_BASE_URL: z.string().url("APP_BASE_URL must be a valid URL"),
   },
 
   /**
@@ -25,6 +35,11 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    SSLCOMMERZ_ENVIRONMENT: process.env.SSLCOMMERZ_ENVIRONMENT,
+    SSLCOMMERZ_STORE_ID: process.env.SSLCOMMERZ_STORE_ID,
+    SSLCOMMERZ_STORE_PASSWD: process.env.SSLCOMMERZ_STORE_PASSWD,
+    SSLCOMMERZ_VALIDATE_RESPONSE: process.env.SSLCOMMERZ_VALIDATE_RESPONSE,
+    APP_BASE_URL: process.env.APP_BASE_URL,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
