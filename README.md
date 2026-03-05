@@ -4,7 +4,7 @@
 >
 > create-t3-turbo now includes the option to use Tanstack Start for the web app!
 
-## Installation
+## Installation 
 
 > [!NOTE]
 >
