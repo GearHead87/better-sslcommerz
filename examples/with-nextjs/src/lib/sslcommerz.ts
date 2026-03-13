@@ -1,4 +1,4 @@
-import { createSslcommerzClient } from "@better-sslcommerz/better-sslcommerz";
+import { createSslcommerzClient } from "better-sslcommerz";
 
 import { env } from "@/env";
 

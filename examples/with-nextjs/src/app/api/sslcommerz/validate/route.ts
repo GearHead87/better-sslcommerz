@@ -14,7 +14,7 @@ export const GET = async (request: Request) => {
       );
     }
 
-    const response = await sslcommerzClient.general.validateOrder({
+    const response = await sslcommerzClient.core.validateOrder({
       val_id: valId,
       format: "json",
     });

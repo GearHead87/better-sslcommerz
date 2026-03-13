@@ -15,7 +15,7 @@ export const POST = async (request: Request) => {
       );
     }
 
-    const validation = await sslcommerzClient.general.validateOrder({
+    const validation = await sslcommerzClient.core.validateOrder({
       val_id: payload.val_id,
       format: "json",
     });

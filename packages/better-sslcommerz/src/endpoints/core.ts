@@ -14,16 +14,16 @@ import {
   transactionQueryByTranIdResponseSchema,
 } from "@better-sslcommerz/validators";
 
-import type { SslcommerzGeneralApi, SslcommerzRuntimeContext } from "../types";
+import type { SslcommerzCoreApi, SslcommerzRuntimeContext } from "../types";
 import { callGet, callPost, parseWithSchema, withAuth } from "../internal";
 
 const CREATE_SESSION_PATH = "gwprocess/v4/api.php";
 const VALIDATE_ORDER_PATH = "validator/api/validationserverAPI.php";
 const TRANSACTION_PATH = "validator/api/merchantTransIDvalidationAPI.php";
 
-export const createGeneralApi = (
+export const createCoreApi = (
   context: SslcommerzRuntimeContext,
-): SslcommerzGeneralApi => ({
+): SslcommerzCoreApi => ({
   createSession(input, options) {
     return callPost({
       context,

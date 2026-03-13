@@ -43,7 +43,7 @@ We will implement **General + Invoice** first since they share the same base URL
   - `index.ts` (public exports)
   - `client.ts` (create client, base config, http helper)
   - `endpoints/`
-    - `general/` (session, validation, refund, transaction query)
+    - `core/` (session, validation, refund, transaction query)
     - `invoice/` (create, status, cancel)
     - `bill-query/` (future)
     - `google-pay/` (future)
@@ -54,7 +54,7 @@ We will implement **General + Invoice** first since they share the same base URL
 
 - `src/`
   - `index.ts` (exports all schemas + types)
-  - `general/`
+  - `core/`
     - `create-session.ts`
     - `validation.ts`
     - `refund.ts`
@@ -71,7 +71,7 @@ We will implement **General + Invoice** first since they share the same base URL
 ## Design Decisions
 
 - **Single client**: `createSslcommerzClient({ storeId, storePasswd, environment })`.
-- **Base URL resolution**: general + invoice use `sandbox.sslcommerz.com` or `securepay.sslcommerz.com`.
+- **Base URL resolution**: core + invoice use `sandbox.sslcommerz.com` or `securepay.sslcommerz.com`.
 - **HTTP**: default to `fetch` with URL-encoded form for POST (per docs) and query params for GET.
 - **Validation**:
   - Always validate inputs with Zod before sending.
@@ -86,7 +86,7 @@ We will implement **General + Invoice** first since they share the same base URL
 ### Phase 1: Validators Foundation
 
 1. Create shared primitives in `validators/src/shared/`.
-2. Add General API schemas:
+2. Add Core API schemas:
    - Create Session request/response
    - IPN payload schema
    - Order Validation request/response
@@ -98,12 +98,12 @@ We will implement **General + Invoice** first since they share the same base URL
    - Invoice Cancellation request/response
 4. Export all Zod schemas + types from `validators/src/index.ts`.
 
-### Phase 2: SDK Client + Endpoints (General + Invoice)
+### Phase 2: SDK Client + Endpoints (Core + Invoice)
 
 1. Implement `client.ts`:
    - config, base URL resolver, request helper
    - strict input validation using validators
-2. Implement General endpoints wrappers:
+2. Implement Core endpoints wrappers:
    - `createSession`, `validateOrder`, `refundInitiate`, `refundStatus`, `transactionQueryBySession`, `transactionQueryByTranId`
 3. Implement Invoice endpoints wrappers:
    - `createInvoice`, `invoiceStatus`, `invoiceCancel`
@@ -111,7 +111,7 @@ We will implement **General + Invoice** first since they share the same base URL
 
 ### Phase 3: Documentation + Examples
 
-1. Add README usage examples for General + Invoice.
+1. Add README usage examples for Core + Invoice.
 2. Add environment configuration guidance.
 3. Add simple error-handling examples.
 
@@ -133,7 +133,7 @@ const sslcz = createSslcommerzClient({
   validateResponse: false,
 });
 
-const session = await sslcz.general.createSession({
+const session = await sslcz.core.createSession({
   total_amount: 1000,
   currency: "BDT",
   tran_id: "T-123",

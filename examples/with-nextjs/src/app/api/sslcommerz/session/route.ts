@@ -23,7 +23,7 @@ export const POST = async (request: Request) => {
         quantity: "1",
       },
     ];
-    const response = await sslcommerzClient.general.createSession({
+    const response = await sslcommerzClient.core.createSession({
       total_amount: selected.price.toFixed(2),
       currency: "BDT",
       tran_id: tranId,

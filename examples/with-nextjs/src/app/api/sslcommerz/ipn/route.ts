@@ -6,10 +6,10 @@ import { getRequestPayload } from "@/lib/request";
 export const POST = async (request: Request) => {
   try {
     const payload = await getRequestPayload(request);
-    const parsed = sslcommerzClient.general.parseIpnPayload(payload);
+    const parsed = sslcommerzClient.core.parseIpnPayload(payload);
     console.log("SSLCommerz IPN received", parsed);
 
-    const validation = await sslcommerzClient.general.validateOrder({
+    const validation = await sslcommerzClient.core.validateOrder({
       val_id: parsed.val_id,
       format: "json",
     });

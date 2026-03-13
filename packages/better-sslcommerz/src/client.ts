@@ -3,7 +3,7 @@ import type {
   SslcommerzClient,
   SslcommerzEnvironment,
 } from "./types";
-import { createGeneralApi } from "./endpoints/general";
+import { createCoreApi } from "./endpoints/core";
 import { createInvoiceApi } from "./endpoints/invoice";
 import { createHttpTransport } from "./http";
 
@@ -39,7 +39,7 @@ export const createSslcommerzClient = (
   return {
     environment,
     baseUrl,
-    general: createGeneralApi(context),
+    core: createCoreApi(context),
     invoice: createInvoiceApi(context),
   };
 };

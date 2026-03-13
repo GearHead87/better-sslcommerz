@@ -86,7 +86,7 @@ export interface SslcommerzRuntimeContext {
   readonly validateResponse: boolean;
 }
 
-export interface SslcommerzGeneralApi {
+export interface SslcommerzCoreApi {
   createSession(
     input: CreateSessionInput,
     options?: SslcommerzRequestOptions,
@@ -132,7 +132,7 @@ export interface SslcommerzInvoiceApi {
 export interface SslcommerzClient {
   readonly environment: SslcommerzEnvironment;
   readonly baseUrl: string;
-  readonly general: SslcommerzGeneralApi;
+  readonly core: SslcommerzCoreApi;
   readonly invoice: SslcommerzInvoiceApi;
 }
 
