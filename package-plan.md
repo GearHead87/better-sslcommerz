@@ -1,4 +1,4 @@
-# @better-sslcommerz/better-sslcommerz Plan
+# better-sslcommerz Plan
 
 ## Goals
 
@@ -31,7 +31,7 @@ We will implement **General + Invoice** first since they share the same base URL
   - Owns all Zod schemas and exported TypeScript types.
   - Exposes request/response schemas per endpoint.
   - Exposes shared primitives (money, currency, tran_id, date-time, etc.).
-- `@better-sslcommerz/better-sslcommerz`
+- `better-sslcommerz`
   - Lightweight HTTP client + endpoint wrappers.
   - Uses validators to parse and validate inputs (and optionally responses).
   - Environment config (sandbox vs live) and base URL resolver.
@@ -124,7 +124,7 @@ We will implement **General + Invoice** first since they share the same base URL
 ## Public API Sketch
 
 ```ts
-import { createSslcommerzClient } from "@better-sslcommerz/better-sslcommerz";
+import { createSslcommerzClient } from "better-sslcommerz";
 
 const sslcz = createSslcommerzClient({
   storeId: "",

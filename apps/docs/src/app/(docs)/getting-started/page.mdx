@@ -14,7 +14,7 @@ This page shows the quickest path to set up Better SSLCommerz.
 ## Installation
 
 ```bash
-pnpm add @better-sslcommerz/better-sslcommerz
+pnpm add better-sslcommerz
 ```
 
 ## Basic setup
@@ -22,7 +22,13 @@ pnpm add @better-sslcommerz/better-sslcommerz
 Create your payment client, then call it from a server route.
 
 ```ts
-import "@better-sslcommerz/better-sslcommerz";
+import { createSslcommerzClient } from "better-sslcommerz";
+
+const sslcommerzClient = createSslcommerzClient({
+  storeId: process.env.SSLCOMMERZ_STORE_ID!,
+  storePasswd: process.env.SSLCOMMERZ_STORE_PASSWD!,
+  environment: "sandbox",
+});
 ```
 
 ## Next steps
