@@ -1,0 +1,251 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Transaction Query",
+  category: "Core API",
+  description:
+    "Look up transaction details by session key with transactionQueryBySession() or by transaction ID with transactionQueryByTranId(). Includes full response field reference and status values.",
+});
+
+# Transaction Query
+
+Two methods let you look up transaction details after a payment:
+
+- `client.core.transactionQueryBySession()` — query by the `sessionkey` returned from `createSession`
+- `client.core.transactionQueryByTranId()` — query by the `tran_id` you supplied to `createSession`
+
+Both use the endpoint: `GET validator/api/merchantTransIDvalidationAPI.php`
+
+These are useful for:
+
+- Reconciling payments that were not confirmed via IPN
+- Admin dashboards that display payment details
+- Verifying payment state without relying on redirect data
+
+---
+
+## Query by session key
+
+```ts
+const result = await client.core.transactionQueryBySession(input, options?);
+```
+
+### Input
+
+<Properties>
+  <Property name="sessionkey" type="string" required>
+    The `sessionkey` returned in the `createSession` response. Max 50
+    characters.
+  </Property>
+</Properties>
+
+### Example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+const result = await sslcommerz.core.transactionQueryBySession({
+  sessionkey: storedSession.sessionKey,
+});
+
+console.log(result.status); // e.g. "VALID"
+console.log(result.tran_id); // your transaction ID
+console.log(result.amount); // payment amount
+```
+
+### Response
+
+<Properties>
+  <Property name="status" type="string" required>
+    Transaction status. See the [status values table](#status-values) below.
+  </Property>
+  <Property name="sessionkey" type="string" optional>
+    The session key, echoed back.
+  </Property>
+  <Property name="APIConnect" type="string" optional>
+    Internal SSLCommerz connection status.
+  </Property>
+  <Property name="tran_id" type="string" required>
+    Your transaction ID.
+  </Property>
+  <Property name="val_id" type="string" required>
+    The validation ID. Can be passed to `validateOrder()` to re-verify.
+  </Property>
+  <Property name="tran_date" type="string" required>
+    Date and time of the transaction.
+  </Property>
+  <Property name="amount" type="string" required>
+    Payment amount.
+  </Property>
+  <Property name="store_amount" type="string" required>
+    Net amount after SSLCommerz fees.
+  </Property>
+  <Property name="currency" type="string" required>
+    3-letter currency code.
+  </Property>
+  <Property name="card_type" type="string" required>
+    Payment gateway used.
+  </Property>
+  <Property name="bank_tran_id" type="string" optional>
+    Bank or gateway transaction reference.
+  </Property>
+  <Property name="card_no" type="string" optional>
+    Masked card number or account reference.
+  </Property>
+  <Property name="card_issuer" type="string" optional>
+    Issuing bank name.
+  </Property>
+  <Property name="card_brand" type="string" optional>
+    Card network: `VISA`, `MASTER`, `AMEX`, `IB`, `MOBILE BANKING`.
+  </Property>
+  <Property name="card_issuer_country" type="string" optional>
+    Country of the issuing bank.
+  </Property>
+  <Property name="card_issuer_country_code" type="string" optional>
+    2-letter country code.
+  </Property>
+  <Property name="currency_type" type="string" optional>
+    Original currency code before conversion.
+  </Property>
+  <Property name="currency_amount" type="string" optional>
+    Original amount before conversion.
+  </Property>
+  <Property name="currency_rate" type="string" optional>
+    Exchange rate applied.
+  </Property>
+  <Property name="base_fair" type="string" optional>
+    Base fare amount.
+  </Property>
+  <Property name="emi_instalment" type="string" optional>
+    EMI tenure in months.
+  </Property>
+  <Property name="emi_amount" type="string" optional>
+    Monthly EMI instalment amount.
+  </Property>
+  <Property name="emi_description" type="string" optional>
+    EMI description.
+  </Property>
+  <Property name="emi_issuer" type="string" optional>
+    EMI issuing bank.
+  </Property>
+  <Property name="discount_percentage" type="string" optional>
+    Discount percentage applied.
+  </Property>
+  <Property name="discount_remarks" type="string" optional>
+    Discount notes.
+  </Property>
+  <Property name="value_a" type="string" optional>
+    Custom value from `createSession`.
+  </Property>
+  <Property name="value_b" type="string" optional>
+    Custom value from `createSession`.
+  </Property>
+  <Property name="value_c" type="string" optional>
+    Custom value from `createSession`.
+  </Property>
+  <Property name="value_d" type="string" optional>
+    Custom value from `createSession`.
+  </Property>
+  <Property name="risk_level" type="string" optional>
+    `"0"` = safe, `"1"` = risky.
+  </Property>
+  <Property name="risk_title" type="string" optional>
+    Risk assessment description.
+  </Property>
+  <Property name="validated_on" type="string" optional>
+    Timestamp of first validation.
+  </Property>
+  <Property name="gw_version" type="string" optional>
+    SSLCommerz gateway version.
+  </Property>
+</Properties>
+
+---
+
+## Query by transaction ID
+
+```ts
+const result = await client.core.transactionQueryByTranId(input, options?);
+```
+
+Querying by `tran_id` returns an **array** of transaction records because a customer may have attempted the same `tran_id` multiple times (e.g. multiple failed attempts before a success).
+
+### Input
+
+<Properties>
+  <Property name="tran_id" type="string" required>
+    The transaction ID you supplied to `createSession`. Max 50 characters.
+  </Property>
+</Properties>
+
+### Example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+const result = await sslcommerz.core.transactionQueryByTranId({
+  tran_id: "ORDER_123456",
+});
+
+console.log(`Found ${result.no_of_trans_found} transaction(s)`);
+
+// Find the successful transaction
+const successful = result.element?.find(
+  (tx) => tx.status === "VALID" || tx.status === "VALIDATED",
+);
+
+if (successful) {
+  console.log("Paid:", successful.amount, successful.currency);
+  console.log("Gateway:", successful.card_type);
+}
+```
+
+### Response
+
+<Properties>
+  <Property name="APIConnect" type="string" optional>
+    Internal SSLCommerz connection status.
+  </Property>
+  <Property name="no_of_trans_found" type="string" optional>
+    The number of transaction records found for this `tran_id`.
+  </Property>
+  <Property name="element" type="array" optional>
+    Array of transaction objects. Each element contains all the same fields as the `transactionQueryBySession` response, plus:
+
+    - `bank_gw` — bank gateway name
+    - `error` — failure reason if the transaction failed
+
+  </Property>
+</Properties>
+
+### Element fields
+
+Each item in `element` contains the same fields as the `transactionQueryBySession` response above, plus:
+
+<Properties>
+  <Property name="bank_gw" type="string" optional>
+    Internal bank gateway identifier.
+  </Property>
+  <Property name="error" type="string" optional>
+    Failure reason for failed transactions (max 255 characters).
+  </Property>
+</Properties>
+
+---
+
+## Status values
+
+| Status        | Meaning                                     |
+| ------------- | ------------------------------------------- |
+| `VALID`       | Successful, confirmed transaction           |
+| `VALIDATED`   | Valid, but already validated previously     |
+| `FAILED`      | Payment failed at the gateway               |
+| `CANCELLED`   | Customer cancelled the payment              |
+| `EXPIRED`     | Payment session timed out                   |
+| `UNATTEMPTED` | Customer did not select a payment method    |
+| `PENDING`     | Payment awaiting completion (IB or delayed) |
+
+<Note>
+  For `PENDING` transactions, continue polling until the status changes.
+  SSLCommerz will also send an IPN when the status resolves.
+</Note>

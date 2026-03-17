@@ -1,0 +1,263 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "TypeScript Types",
+  category: "Reference",
+  description:
+    "Complete TypeScript type reference for better-sslcommerz — all input types, response types, utility types, and Zod schemas exported from the package.",
+});
+
+# TypeScript Types
+
+All types and Zod schemas used internally by `better-sslcommerz` are re-exported from the package. You never need to install `@better-sslcommerz/validators` separately.
+
+```ts
+import type {
+  CreateSessionInput,
+  CreateSessionResponse,
+  IpnPayload,
+  SslcommerzClient,
+} from "better-sslcommerz";
+```
+
+---
+
+## Input types
+
+These are the types for the first argument of each client method. They are the full request types with `store_id` and `store_passwd` omitted — those fields are injected automatically from your client credentials.
+
+| Type                             | Method                                    |
+| -------------------------------- | ----------------------------------------- |
+| `CreateSessionInput`             | `client.core.createSession()`             |
+| `ValidateOrderInput`             | `client.core.validateOrder()`             |
+| `RefundInitiateInput`            | `client.core.refundInitiate()`            |
+| `RefundStatusInput`              | `client.core.refundStatus()`              |
+| `TransactionQueryBySessionInput` | `client.core.transactionQueryBySession()` |
+| `TransactionQueryByTranIdInput`  | `client.core.transactionQueryByTranId()`  |
+| `CreateInvoiceInput`             | `client.invoice.createInvoice()`          |
+| `InvoiceStatusInput`             | `client.invoice.invoiceStatus()`          |
+| `InvoiceCancelInput`             | `client.invoice.invoiceCancel()`          |
+
+```ts
+import type { CreateSessionInput } from "better-sslcommerz";
+
+function buildSessionInput(order: Order): CreateSessionInput {
+  return {
+    total_amount: order.amount,
+    currency: "BDT",
+    tran_id: order.id,
+    success_url: "https://yoursite.com/success",
+    fail_url: "https://yoursite.com/fail",
+    cancel_url: "https://yoursite.com/cancel",
+    product_name: order.productName,
+    product_category: "general",
+    product_profile: "general",
+    cus_name: order.customerName,
+    cus_email: order.customerEmail,
+    cus_add1: order.address,
+    cus_city: order.city,
+    cus_postcode: order.postcode,
+    cus_country: order.country,
+    cus_phone: order.phone,
+    shipping_method: "NO",
+    num_of_item: 1,
+  };
+}
+```
+
+---
+
+## Response types
+
+These are the types returned by each client method.
+
+| Type                                | Method                                    |
+| ----------------------------------- | ----------------------------------------- |
+| `CreateSessionResponse`             | `client.core.createSession()`             |
+| `OrderValidationResponse`           | `client.core.validateOrder()`             |
+| `RefundInitiateResponse`            | `client.core.refundInitiate()`            |
+| `RefundStatusResponse`              | `client.core.refundStatus()`              |
+| `TransactionQueryBySessionResponse` | `client.core.transactionQueryBySession()` |
+| `TransactionQueryByTranIdResponse`  | `client.core.transactionQueryByTranId()`  |
+| `IpnPayload`                        | `client.core.parseIpnPayload()`           |
+| `CreateInvoiceResponse`             | `client.invoice.createInvoice()`          |
+| `InvoiceStatusResponse`             | `client.invoice.invoiceStatus()`          |
+| `InvoiceCancelResponse`             | `client.invoice.invoiceCancel()`          |
+
+```ts
+import type { IpnPayload, OrderValidationResponse } from "better-sslcommerz";
+
+async function handleIpn(rawPayload: unknown): Promise<void> {
+  const ipn: IpnPayload = sslcommerz.core.parseIpnPayload(rawPayload);
+  const validation: OrderValidationResponse =
+    await sslcommerz.core.validateOrder({
+      val_id: ipn.val_id,
+    });
+  // ...
+}
+```
+
+---
+
+## Full request types (with auth)
+
+These include `store_id` and `store_passwd`. Use them when working with `@better-sslcommerz/validators` directly, or when you need the complete shape including auth fields.
+
+| Type                               | Zod schema                               |
+| ---------------------------------- | ---------------------------------------- |
+| `CreateSessionRequest`             | `createSessionRequestSchema`             |
+| `OrderValidationRequest`           | `orderValidationRequestSchema`           |
+| `RefundInitiateRequest`            | `refundInitiateRequestSchema`            |
+| `RefundStatusRequest`              | `refundStatusRequestSchema`              |
+| `TransactionQueryBySessionRequest` | `transactionQueryBySessionRequestSchema` |
+| `TransactionQueryByTranIdRequest`  | `transactionQueryByTranIdRequestSchema`  |
+| `CreateInvoiceRequest`             | `createInvoiceRequestSchema`             |
+| `InvoiceStatusRequest`             | `invoiceStatusRequestSchema`             |
+| `InvoiceCancelRequest`             | `invoiceCancelRequestSchema`             |
+
+---
+
+## Utility types
+
+<Properties>
+  <Property name="SslcommerzEnvironment" type='"sandbox" | "live"'>
+    The two environment modes supported by the client.
+
+    ```ts
+    import type { SslcommerzEnvironment } from "better-sslcommerz";
+    const env: SslcommerzEnvironment = "sandbox";
+    ```
+
+  </Property>
+  <Property name="SslcommerzClient" type="interface">
+    The type of the object returned by `createSslcommerzClient()`. Contains `environment`, `baseUrl`, `core`, and `invoice`.
+
+    ```ts
+    import type { SslcommerzClient } from "better-sslcommerz";
+
+    function useClient(client: SslcommerzClient) {
+      console.log(client.environment); // "sandbox" | "live"
+    }
+    ```
+
+  </Property>
+  <Property name="SslcommerzCoreApi" type="interface">
+    The type of `client.core`. Useful when passing the core API as a parameter.
+
+    ```ts
+    import type { SslcommerzCoreApi } from "better-sslcommerz";
+
+    async function validatePayment(
+      core: SslcommerzCoreApi,
+      valId: string,
+    ) {
+      return core.validateOrder({ val_id: valId });
+    }
+    ```
+
+  </Property>
+  <Property name="SslcommerzInvoiceApi" type="interface">
+    The type of `client.invoice`. Useful when passing the invoice API as a parameter.
+  </Property>
+  <Property name="SslcommerzRequestOptions" type="interface">
+    The type of the optional second argument accepted by every method. Contains `signal?: AbortSignal` and `validateResponse?: boolean`.
+
+    ```ts
+    import type { SslcommerzRequestOptions } from "better-sslcommerz";
+
+    const options: SslcommerzRequestOptions = {
+      signal: controller.signal,
+      validateResponse: true,
+    };
+    ```
+
+  </Property>
+  <Property name="CreateSslcommerzClientOptions" type="interface">
+    The options accepted by `createSslcommerzClient()`. See [Configuration](/configuration) for details.
+  </Property>
+  <Property name="FetchLike" type="typeof fetch">
+    A type alias for any `fetch`-compatible function. Use it when typing the `fetch` option.
+
+    ```ts
+    import type { FetchLike } from "better-sslcommerz";
+
+    const myFetch: FetchLike = (url, init) => {
+      console.log("Fetching:", url);
+      return fetch(url, init);
+    };
+    ```
+
+  </Property>
+  <Property name="WithAuth" type="generic utility type">
+    A utility type that adds `store_id: string` and `store_passwd: string` to any type `T`. Used internally to build full request payloads.
+  </Property>
+</Properties>
+
+---
+
+## Zod schemas
+
+All Zod schemas are exported alongside their TypeScript types. Import them if you want to validate payloads independently or extend them for custom use.
+
+```ts
+import {
+  createInvoiceRequestSchema,
+  createInvoiceResponseSchema,
+  createSessionRequestSchema,
+  createSessionResponseSchema,
+  invoiceCancelRequestSchema,
+  invoiceCancelResponseSchema,
+  invoiceStatusRequestSchema,
+  invoiceStatusResponseSchema,
+  ipnPayloadSchema,
+  orderValidationRequestSchema,
+  orderValidationResponseSchema,
+  refundInitiateRequestSchema,
+  refundInitiateResponseSchema,
+  refundStatusRequestSchema,
+  refundStatusResponseSchema,
+  transactionQueryBySessionRequestSchema,
+  transactionQueryBySessionResponseSchema,
+  transactionQueryByTranIdRequestSchema,
+  transactionQueryByTranIdResponseSchema,
+} from "better-sslcommerz";
+```
+
+### Example: validate an IPN payload manually
+
+```ts
+import { ipnPayloadSchema } from "better-sslcommerz";
+
+const result = ipnPayloadSchema.safeParse(rawPayload);
+if (!result.success) {
+  console.error(result.error.issues);
+} else {
+  console.log(result.data.val_id);
+}
+```
+
+### Example: extend a schema
+
+```ts
+import { createSessionRequestSchema } from "better-sslcommerz";
+import { z } from "zod/v4";
+
+// Add a custom required field on top of the standard schema
+const mySessionSchema = createSessionRequestSchema.extend({
+  value_a: z.string().min(1, "order ID is required"),
+});
+
+type MySessionRequest = z.infer<typeof mySessionSchema>;
+```
+
+---
+
+## Shared primitive types
+
+These are re-exported from `@better-sslcommerz/validators` for advanced use:
+
+| Schema            | Description                                                     |
+| ----------------- | --------------------------------------------------------------- |
+| `TransactionBase` | Base transaction shape shared by query and validation responses |
+
+The `TransactionBase` type includes all the common transaction fields: `status`, `tran_id`, `val_id`, `tran_date`, `amount`, `store_amount`, `currency`, `card_type`, `bank_tran_id`, card details, EMI fields, discount fields, custom values, risk assessment, and gateway metadata.

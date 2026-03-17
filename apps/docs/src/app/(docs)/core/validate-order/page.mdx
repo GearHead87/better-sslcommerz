@@ -1,0 +1,244 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Validate Order",
+  category: "Core API",
+  description:
+    "Confirm a payment by calling client.core.validateOrder() with the val_id from an IPN or redirect. Includes security checklist and full response field reference.",
+});
+
+# Validate Order
+
+`client.core.validateOrder()` confirms a payment by querying SSLCommerz's validation server with the `val_id` received from either the IPN callback or the redirect URL. This is the definitive confirmation step — never update your database based on IPN or redirect data alone.
+
+**Underlying endpoint:** `GET validator/api/validationserverAPI.php`
+
+```ts
+const validation = await client.core.validateOrder(input, options?);
+```
+
+## When to call it
+
+Call `validateOrder` in **two places**:
+
+1. **In your IPN handler** — after receiving an IPN POST with `status: "VALID"`, validate the `val_id` before marking the order as paid.
+2. **In your success redirect handler** — after the customer is redirected back to your `success_url`, validate the `val_id` from the POST data as a fallback (IPN can sometimes be delayed).
+
+## Input
+
+<Properties>
+  <Property name="val_id" type="string" required>
+    The validation ID from the IPN payload (`ipn.val_id`) or from the
+    success/fail redirect POST body. Max 50 characters.
+  </Property>
+</Properties>
+
+`store_id` and `store_passwd` are automatically injected from the client — do not include them.
+
+## Example
+
+```ts
+// app/api/ipn/route.ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+export async function POST(request: Request) {
+  const form = await request.formData();
+  const valId = form.get("val_id") as string;
+  const tranId = form.get("tran_id") as string;
+
+  const validation = await sslcommerz.core.validateOrder({ val_id: valId });
+
+  // 1. Check the validation status
+  if (validation.status !== "VALID" && validation.status !== "VALIDATED") {
+    return new Response("Payment not valid", { status: 400 });
+  }
+
+  // 2. Cross-check tran_id against your database
+  const order = await db.orders.findByTranId(validation.tran_id);
+  if (!order) {
+    return new Response("Order not found", { status: 404 });
+  }
+
+  // 3. Cross-check the amount
+  if (Number(validation.amount) !== order.expectedAmount) {
+    console.error("Amount mismatch — possible tampering detected");
+    return new Response("Amount mismatch", { status: 400 });
+  }
+
+  // 4. Check risk level
+  if (validation.risk_level === "1") {
+    await db.orders.flagAsRisky(order.id);
+    return new Response("OK");
+  }
+
+  // 5. All clear — fulfil the order
+  await db.orders.markAsPaid(order.id, {
+    valId: validation.val_id,
+    bankTranId: validation.bank_tran_id,
+  });
+
+  return new Response("OK");
+}
+```
+
+## Success redirect handler
+
+```ts
+// app/payment/success/route.ts
+import { NextResponse } from "next/server";
+import { sslcommerz } from "@/lib/sslcommerz";
+
+// SSLCommerz POSTs form data to success_url
+export async function POST(request: Request) {
+  const form = await request.formData();
+  const valId = form.get("val_id") as string;
+
+  const validation = await sslcommerz.core.validateOrder({ val_id: valId });
+
+  if (validation.status !== "VALID" && validation.status !== "VALIDATED") {
+    return NextResponse.redirect(new URL("/payment/failed", request.url));
+  }
+
+  // Order verified — redirect to confirmation page
+  return NextResponse.redirect(
+    new URL(`/orders/${validation.tran_id}`, request.url),
+  );
+}
+```
+
+## Response
+
+<Properties>
+  <Property name="status" type="string" required>
+    Validation result. One of:
+
+    | Value                  | Meaning                                        |
+    | ---------------------- | ---------------------------------------------- |
+    | `VALID`                | Payment confirmed                              |
+    | `VALIDATED`            | Valid, but this `val_id` was validated before  |
+    | `INVALID_TRANSACTION`  | Validation failed — do not fulfil             |
+    | `FAILED`               | Transaction failed                             |
+    | `CANCELLED`            | Customer cancelled                             |
+    | `EXPIRED`              | Payment session expired                        |
+    | `UNATTEMPTED`          | Customer never chose a payment method          |
+
+  </Property>
+  <Property name="tran_id" type="string" required>
+    Your original transaction ID. Cross-check this against your database.
+  </Property>
+  <Property name="val_id" type="string" required>
+    The validation ID, echoed back.
+  </Property>
+  <Property name="tran_date" type="string" required>
+    Date and time of the transaction.
+  </Property>
+  <Property name="amount" type="string" required>
+    The validated payment amount. **Always cross-check this against the amount in your database.**
+  </Property>
+  <Property name="store_amount" type="string" required>
+    Net amount credited to your account after SSLCommerz charges.
+  </Property>
+  <Property name="currency" type="string" required>
+    3-letter currency code.
+  </Property>
+  <Property name="card_type" type="string" required>
+    Payment gateway used (e.g. `"VISA"`, `"bKash"`).
+  </Property>
+  <Property name="bank_tran_id" type="string" optional>
+    Bank or gateway transaction reference. Store this — you need it to [initiate a refund](/core/refund).
+  </Property>
+  <Property name="card_no" type="string" optional>
+    Masked card number or account reference.
+  </Property>
+  <Property name="card_issuer" type="string" optional>
+    Issuing bank name.
+  </Property>
+  <Property name="card_brand" type="string" optional>
+    Card network: `VISA`, `MASTER`, `AMEX`, `IB`, `MOBILE BANKING`.
+  </Property>
+  <Property name="card_issuer_country" type="string" optional>
+    Country of the issuing bank.
+  </Property>
+  <Property name="card_issuer_country_code" type="string" optional>
+    2-letter country code of the issuing bank.
+  </Property>
+  <Property name="currency_type" type="string" optional>
+    Original currency code before conversion.
+  </Property>
+  <Property name="currency_amount" type="string" optional>
+    Original amount before currency conversion.
+  </Property>
+  <Property name="currency_rate" type="string" optional>
+    Exchange rate applied.
+  </Property>
+  <Property name="base_fair" type="string" optional>
+    Base fare (relevant for airline tickets).
+  </Property>
+  <Property name="emi_instalment" type="string" optional>
+    EMI tenure in months if the customer paid via EMI.
+  </Property>
+  <Property name="emi_amount" type="string" optional>
+    Monthly EMI instalment amount.
+  </Property>
+  <Property name="emi_description" type="string" optional>
+    EMI description text.
+  </Property>
+  <Property name="emi_issuer" type="string" optional>
+    EMI issuing bank.
+  </Property>
+  <Property name="discount_amount" type="string" optional>
+    Discount applied to this transaction.
+  </Property>
+  <Property name="discount_percentage" type="string" optional>
+    Discount percentage.
+  </Property>
+  <Property name="discount_remarks" type="string" optional>
+    Notes about the discount.
+  </Property>
+  <Property name="value_a" type="string" optional>
+    Custom value from `createSession`, returned unchanged.
+  </Property>
+  <Property name="value_b" type="string" optional>
+    Custom value from `createSession`.
+  </Property>
+  <Property name="value_c" type="string" optional>
+    Custom value from `createSession`.
+  </Property>
+  <Property name="value_d" type="string" optional>
+    Custom value from `createSession`.
+  </Property>
+  <Property name="risk_level" type="string" optional>
+    `"0"` = safe. `"1"` = risky — hold fulfilment and verify customer identity.
+  </Property>
+  <Property name="risk_title" type="string" optional>
+    Human-readable description of the risk assessment.
+  </Property>
+  <Property name="account_details" type="string" optional>
+    Account details for the payment method used.
+  </Property>
+  <Property name="gw_version" type="string" optional>
+    SSLCommerz gateway version.
+  </Property>
+  <Property name="APIConnect" type="string" optional>
+    Internal connection status from SSLCommerz (e.g. `"DONE"`).
+  </Property>
+  <Property name="validated_on" type="string" optional>
+    Timestamp when this `val_id` was first validated.
+  </Property>
+</Properties>
+
+## Security checklist
+
+Before updating your database or fulfilling an order:
+
+1. **`status` must be `"VALID"` or `"VALIDATED"`** — any other value means the payment is not confirmed. Reject it.
+2. **Cross-check `tran_id`** — it must match an order in your database. Reject if not found.
+3. **Cross-check `amount`** — it must match the expected order amount. A mismatch indicates possible tampering.
+4. **Cross-check `currency`** — it must match what you expected. Do not fulfil if the currency differs.
+5. **Handle `risk_level = "1"`** — do not automatically fulfil. Hold the order and verify the customer manually.
+6. **Handle `"VALIDATED"` status** — this means the `val_id` was already validated once. Your idempotency logic should prevent double-fulfilment regardless of this status.
+
+<Note>
+  Store `bank_tran_id` from the response — you will need it if you ever need to
+  [initiate a refund](/core/refund) for this transaction.
+</Note>

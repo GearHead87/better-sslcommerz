@@ -1,0 +1,243 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Refunds",
+  category: "Core API",
+  description:
+    "Initiate a refund with client.core.refundInitiate() and poll its status with client.core.refundStatus(). Includes the new refund_trans_id field required from February 2025.",
+});
+
+# Refunds
+
+The refund API has two methods:
+
+- `client.core.refundInitiate()` — request a refund for a completed transaction
+- `client.core.refundStatus()` — check the status of an in-progress refund
+
+Both use the same underlying endpoint: `GET validator/api/merchantTransIDvalidationAPI.php`
+
+<Warning>
+  **Live environment only:** The Refund API requires your server's public IP
+  address to be whitelisted in the SSLCommerz Live System. Contact SSLCommerz
+  support to register your IP before using refunds in production.
+</Warning>
+
+## Initiate a refund
+
+```ts
+const result = await client.core.refundInitiate(input, options?);
+```
+
+To initiate a refund, you need the `bank_tran_id` from the [Order Validation](/core/validate-order) response. Make sure you stored it when the payment was confirmed.
+
+### Input
+
+<Properties>
+  <Property name="bank_tran_id" type="string" required>
+    The bank transaction ID from the `validateOrder` (or IPN) response. This is
+    the gateway-level transaction reference, **not** your `tran_id`. Max 80
+    characters.
+  </Property>
+  <Property name="refund_trans_id" type="string" required since="2025-02-24">
+    A unique refund transaction ID that **you** generate for this refund
+    request. Max 30 characters. This field was added to the SSLCommerz API on 24
+    February 2025 and is now required for all refund requests.
+  </Property>
+  <Property name="refund_amount" type="number | string" required>
+    The amount to refund. Must be a decimal with up to 2 places and cannot
+    exceed the original transaction amount.
+  </Property>
+  <Property name="refund_remarks" type="string" required>
+    A reason for the refund. This is visible in the SSLCommerz merchant panel.
+    Max 255 characters.
+  </Property>
+  <Property name="refe_id" type="string" optional>
+    Optional internal reference ID, max 50 characters.
+  </Property>
+</Properties>
+
+`store_id` and `store_passwd` are injected automatically.
+
+### Example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+// Initiate a full refund
+const refund = await sslcommerz.core.refundInitiate({
+  bank_tran_id: order.bankTranId, // stored from validateOrder response
+  refund_trans_id: `REF_${Date.now()}`, // unique ID you generate
+  refund_amount: order.amount,
+  refund_remarks: "Customer requested cancellation",
+  refe_id: order.id,
+});
+
+if (refund.status === "success") {
+  // Store refund_ref_id — you need it to check status later
+  await db.refunds.create({
+    orderId: order.id,
+    refundRefId: refund.refund_ref_id,
+    status: "processing",
+  });
+} else {
+  console.error("Refund failed:", refund.errorReason);
+}
+```
+
+### Response
+
+<Properties>
+  <Property name="APIConnect" type="string" required>
+    Connection status. One of:
+
+    | Value             | Meaning                                     |
+    | ----------------- | ------------------------------------------- |
+    | `DONE`            | Request processed (check `status`)          |
+    | `INACTIVE`        | Your store is inactive                      |
+    | `FAILED`          | Request could not be processed              |
+    | `INVALID_REQUEST` | Bad request parameters                      |
+
+  </Property>
+  <Property name="status" type="string" optional>
+    Refund initiation status: `"success"`, `"failed"`, or `"processing"`.
+  </Property>
+  <Property name="refund_ref_id" type="string" optional>
+    The refund reference ID assigned by SSLCommerz. **Store this** — you need it to query the refund status later with `refundStatus()`.
+  </Property>
+  <Property name="bank_tran_id" type="string" optional>
+    The bank transaction ID, echoed back.
+  </Property>
+  <Property name="trans_id" type="string" optional>
+    The original transaction ID.
+  </Property>
+  <Property name="errorReason" type="string" optional>
+    Human-readable error message when the refund could not be initiated.
+  </Property>
+</Properties>
+
+---
+
+## Query refund status
+
+```ts
+const status = await client.core.refundStatus(input, options?);
+```
+
+After initiating a refund, poll `refundStatus()` using the `refund_ref_id` from the initiation response to track progress.
+
+### Input
+
+<Properties>
+  <Property name="refund_ref_id" type="string" required>
+    The refund reference ID returned by `refundInitiate()`. Max 50 characters.
+  </Property>
+</Properties>
+
+### Example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+const status = await sslcommerz.core.refundStatus({
+  refund_ref_id: storedRefund.refundRefId,
+});
+
+switch (status.status) {
+  case "refunded":
+    await db.refunds.markAsComplete(storedRefund.id, status.refunded_on);
+    break;
+  case "processing":
+    // Refund is in progress — check again later
+    break;
+  case "cancelled":
+    await db.refunds.markAsCancelled(storedRefund.id);
+    break;
+}
+```
+
+### Response
+
+<Properties>
+  <Property name="APIConnect" type="string" required>
+    Connection status from SSLCommerz.
+  </Property>
+  <Property name="status" type="string" optional>
+    Current refund status:
+
+    | Value        | Meaning                                    |
+    | ------------ | ------------------------------------------ |
+    | `refunded`   | Refund completed successfully              |
+    | `processing` | Refund is in progress at the bank level    |
+    | `cancelled`  | Refund was cancelled                       |
+
+  </Property>
+  <Property name="refund_ref_id" type="string" optional>
+    The refund reference ID, echoed back.
+  </Property>
+  <Property name="bank_tran_id" type="string" optional>
+    The bank transaction ID of the original payment.
+  </Property>
+  <Property name="tran_id" type="string" optional>
+    Your original transaction ID.
+  </Property>
+  <Property name="initiated_on" type="string" optional>
+    Timestamp when the refund was initiated.
+  </Property>
+  <Property name="refunded_on" type="string" optional>
+    Timestamp when the refund was completed. Only present when `status === "refunded"`.
+  </Property>
+  <Property name="errorReason" type="string" optional>
+    Error message if the refund could not be completed.
+  </Property>
+</Properties>
+
+## Full refund flow
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+async function processRefund(order: Order) {
+  // Step 1: Initiate
+  const initResult = await sslcommerz.core.refundInitiate({
+    bank_tran_id: order.bankTranId,
+    refund_trans_id: `REF_${order.id}_${Date.now()}`,
+    refund_amount: order.amount,
+    refund_remarks: `Refund for order ${order.id}`,
+  });
+
+  if (!initResult.refund_ref_id) {
+    throw new Error(`Refund initiation failed: ${initResult.errorReason}`);
+  }
+
+  const refundRefId = initResult.refund_ref_id;
+  await db.refunds.save({
+    orderId: order.id,
+    refundRefId,
+    status: "processing",
+  });
+
+  // Step 2: Poll for completion (e.g. in a background job)
+  let attempts = 0;
+  while (attempts < 10) {
+    await sleep(30_000); // wait 30 seconds between checks
+
+    const statusResult = await sslcommerz.core.refundStatus({
+      refund_ref_id: refundRefId,
+    });
+
+    if (statusResult.status === "refunded") {
+      await db.refunds.markComplete(refundRefId, statusResult.refunded_on);
+      return { success: true };
+    }
+
+    if (statusResult.status === "cancelled") {
+      await db.refunds.markCancelled(refundRefId);
+      return { success: false, reason: "cancelled" };
+    }
+
+    attempts++;
+  }
+
+  return { success: false, reason: "timeout" };
+}
+```

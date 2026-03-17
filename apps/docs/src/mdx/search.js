@@ -11,8 +11,13 @@ import { createLoader } from "simple-functional-loader";
 import { filter } from "unist-util-filter";
 import { SKIP, visit } from "unist-util-visit";
 
+import { remarkPlugins } from "./remark.js";
+
 const __filename = url.fileURLToPath(import.meta.url);
-const processor = remark().use(remarkMdx).use(extractSections);
+const processor = remark()
+  .use(remarkMdx)
+  .use(remarkPlugins)
+  .use(extractSections);
 const slugify = slugifyWithCounter();
 
 function isObjectExpression(node) {

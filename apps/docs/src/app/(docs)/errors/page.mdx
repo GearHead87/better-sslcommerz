@@ -1,0 +1,243 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Error Handling",
+  category: "Reference",
+  description:
+    "Understand the three error classes thrown by better-sslcommerz — SslcommerzError, SslcommerzHttpError, and SslcommerzValidationError — and how to catch and narrow them.",
+});
+
+# Error Handling
+
+`better-sslcommerz` throws three typed error classes. All three extend the native `Error` class and are safe to use with `instanceof`.
+
+## Error hierarchy
+
+```
+Error
+└── SslcommerzError                  base class for all package errors
+    ├── SslcommerzHttpError          non-2xx HTTP response from SSLCommerz
+    └── SslcommerzValidationError    Zod schema parse failure
+```
+
+---
+
+## SslcommerzError
+
+The base class. All errors thrown by this package are instances of `SslcommerzError`, so catching it catches everything.
+
+```ts
+import { SslcommerzError } from "better-sslcommerz";
+
+try {
+  await client.core.createSession(input);
+} catch (error) {
+  if (error instanceof SslcommerzError) {
+    console.error(`[${error.code}] ${error.message}`);
+    // error.cause contains the original underlying error if any
+  }
+}
+```
+
+### Properties
+
+<Properties>
+  <Property name="message" type="string">
+    Human-readable error description.
+  </Property>
+  <Property name="code" type="string" defaultValue='"SSL_COMMERZ_ERROR"'>
+    Error code string. Sub-classes override this with a more specific code.
+  </Property>
+  <Property name="name" type="string" defaultValue='"SslcommerzError"'>
+    Error name. Set to the subclass name when an instance is a subclass.
+  </Property>
+  <Property name="cause" type="unknown" optional>
+    The underlying error that caused this one, if any. Follows the native
+    `Error` `cause` option.
+  </Property>
+</Properties>
+
+---
+
+## SslcommerzHttpError
+
+Thrown when SSLCommerz returns a non-2xx HTTP status code. This indicates a network-level or server-level failure (e.g. 500 Internal Server Error, 429 Too Many Requests).
+
+```ts
+import { SslcommerzError, SslcommerzHttpError } from "better-sslcommerz";
+
+try {
+  await client.core.createSession(input);
+} catch (error) {
+  if (error instanceof SslcommerzHttpError) {
+    console.error(`HTTP ${error.status} from ${error.endpoint}`);
+    console.error("Response body:", error.responseBody);
+
+    if (error.status === 429) {
+      // Rate limited — back off and retry
+    }
+  }
+}
+```
+
+### Properties
+
+<Properties>
+  <Property name="code" type='"SSL_COMMERZ_HTTP_ERROR"'>
+    Fixed error code for HTTP errors.
+  </Property>
+  <Property name="endpoint" type="string">
+    The endpoint path that returned the error (e.g. `"gwprocess/v4/api.php"`).
+  </Property>
+  <Property name="status" type="number">
+    The HTTP status code (e.g. `500`, `429`, `503`).
+  </Property>
+  <Property name="statusText" type="string">
+    The HTTP status text (e.g. `"Internal Server Error"`).
+  </Property>
+  <Property name="responseBody" type="string">
+    The raw response body as a string. Useful for debugging unexpected server
+    responses.
+  </Property>
+</Properties>
+
+---
+
+## SslcommerzValidationError
+
+Thrown when a Zod schema parse fails. This can happen at two stages:
+
+- **`stage: "request"`** — always, when your input does not satisfy the request schema. This catches missing required fields, wrong types, invalid URLs, etc. before the request is even sent.
+- **`stage: "response"`** — only when `validateResponse: true` is set (on the client or per-request), if the SSLCommerz API returns an unexpected response shape.
+
+`parseIpnPayload()` **always** validates and throws `SslcommerzValidationError` on failure, regardless of `validateResponse`.
+
+```ts
+import {
+  SslcommerzError,
+  SslcommerzHttpError,
+  SslcommerzValidationError,
+} from "better-sslcommerz";
+
+try {
+  await client.core.createSession(input);
+} catch (error) {
+  if (error instanceof SslcommerzValidationError) {
+    if (error.stage === "request") {
+      // Your input was invalid — inspect error.issues for details
+      console.error("Invalid request input:", error.issues);
+    } else {
+      // SSLCommerz returned an unexpected response shape
+      console.error("Unexpected API response:", error.issues);
+    }
+  } else if (error instanceof SslcommerzHttpError) {
+    console.error(`HTTP ${error.status}: ${error.responseBody}`);
+  } else if (error instanceof SslcommerzError) {
+    console.error("SSLCommerz error:", error.message);
+  } else {
+    throw error; // re-throw unknown errors
+  }
+}
+```
+
+### Properties
+
+<Properties>
+  <Property name="code" type='"SSL_COMMERZ_VALIDATION_ERROR"'>
+    Fixed error code for validation errors.
+  </Property>
+  <Property name="stage" type='"request" | "response"'>
+    Indicates whether the validation failure occurred on the outgoing request input or the incoming API response.
+  </Property>
+  <Property name="endpoint" type="string">
+    The endpoint path associated with the failed validation (e.g. `"gwprocess/v4/api.php"`). For `parseIpnPayload`, this is `"ipn/payload"`.
+  </Property>
+  <Property name="issues" type="unknown">
+    The Zod issue array from the failed parse. Contains field-level details about what went wrong. Cast to `z.ZodIssue[]` if you need to inspect individual issues.
+
+    ```ts
+    import { z } from "zod/v4";
+
+    if (error instanceof SslcommerzValidationError) {
+      const issues = error.issues as z.ZodIssue[];
+      for (const issue of issues) {
+        console.error(`  ${issue.path.join(".")}: ${issue.message}`);
+      }
+    }
+    ```
+
+  </Property>
+</Properties>
+
+---
+
+## Full example with all error types
+
+```ts
+import {
+  SslcommerzError,
+  SslcommerzHttpError,
+  SslcommerzValidationError,
+} from "better-sslcommerz";
+import { z } from "zod/v4";
+
+export async function initiatePayment(orderData: OrderData) {
+  try {
+    const response = await sslcommerz.core.createSession({
+      total_amount: orderData.amount,
+      currency: "BDT",
+      tran_id: orderData.id,
+      success_url: "https://yoursite.com/success",
+      fail_url: "https://yoursite.com/fail",
+      cancel_url: "https://yoursite.com/cancel",
+      // ...other fields
+    });
+
+    return { url: response.GatewayPageURL };
+  } catch (error) {
+    if (error instanceof SslcommerzValidationError) {
+      // Input validation failed — your request data is wrong
+      const issues = error.issues as z.ZodIssue[];
+      const fieldErrors = issues.map(
+        (i) => `${i.path.join(".")}: ${i.message}`,
+      );
+      return {
+        error: "Invalid payment data",
+        fields: fieldErrors,
+      };
+    }
+
+    if (error instanceof SslcommerzHttpError) {
+      // SSLCommerz API returned an error status
+      console.error(
+        `SSLCommerz API error: HTTP ${error.status} at ${error.endpoint}`,
+      );
+      return { error: "Payment gateway error. Please try again." };
+    }
+
+    if (error instanceof SslcommerzError) {
+      // Some other SSLCommerz-specific error
+      console.error("SSLCommerz error:", error.code, error.message);
+      return { error: "Payment service unavailable." };
+    }
+
+    // Unknown error — rethrow to let it bubble up
+    throw error;
+  }
+}
+```
+
+---
+
+## When each error is thrown
+
+| Scenario                                       | Error class                                       |
+| ---------------------------------------------- | ------------------------------------------------- |
+| Missing required field in input                | `SslcommerzValidationError` (`stage: "request"`)  |
+| Invalid email, URL, or currency format         | `SslcommerzValidationError` (`stage: "request"`)  |
+| EMI fields missing when `emi_option=1`         | `SslcommerzValidationError` (`stage: "request"`)  |
+| Shipping fields missing when required          | `SslcommerzValidationError` (`stage: "request"`)  |
+| SSLCommerz returns HTTP 4xx or 5xx             | `SslcommerzHttpError`                             |
+| `validateResponse: true` and unexpected shape  | `SslcommerzValidationError` (`stage: "response"`) |
+| Invalid IPN payload shape in `parseIpnPayload` | `SslcommerzValidationError` (`stage: "request"`)  |
+| Network timeout (AbortSignal fires)            | Native `DOMException` (AbortError)                |

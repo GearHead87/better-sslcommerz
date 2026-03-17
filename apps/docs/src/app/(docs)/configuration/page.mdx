@@ -1,0 +1,172 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Configuration",
+  category: "Getting Started",
+  description:
+    "Full reference for CreateSslcommerzClientOptions and per-request SslcommerzRequestOptions — environment, timeout, custom fetch, response validation, and more.",
+});
+
+# Configuration
+
+All configuration is passed to `createSslcommerzClient()` when you create your client. There are no global singletons — every option lives on the client instance.
+
+## Client options
+
+```ts
+import { createSslcommerzClient } from "better-sslcommerz";
+
+const client = createSslcommerzClient({
+  storeId: process.env.SSLCOMMERZ_STORE_ID!,
+  storePasswd: process.env.SSLCOMMERZ_STORE_PASSWD!,
+  environment: "sandbox",
+  validateResponse: false,
+  timeoutMs: 30_000,
+});
+```
+
+<Properties>
+  <Property name="storeId" type="string" required>
+    Your SSLCommerz store ID. Obtain this from the [SSLCommerz merchant panel](https://developer.sslcommerz.com/).
+    Automatically injected as `store_id` on every API request — you never pass it yourself.
+  </Property>
+  <Property name="storePasswd" type="string" required>
+    Your SSLCommerz store password. Automatically injected as `store_passwd` on every API request.
+    Keep this value server-side only — never expose it in client bundles.
+  </Property>
+  <Property name="environment" type='"sandbox" | "live"' optional defaultValue='"sandbox"'>
+    Selects the target base URL.
+
+    - `"sandbox"` → `https://sandbox.sslcommerz.com` — test environment, no real money moves.
+    - `"live"` → `https://securepay.sslcommerz.com` — production environment.
+
+    Ignored when `baseUrl` is also set.
+
+  </Property>
+  <Property name="validateResponse" type="boolean" optional defaultValue="false">
+    When `true`, every API response is parsed through the corresponding Zod schema before being returned.
+    If the response shape does not match, a `SslcommerzValidationError` is thrown with `stage: "response"`.
+
+    Leave this `false` in production if you prefer to trust SSLCommerz responses.
+    Enable it during development to catch unexpected API changes early.
+
+  </Property>
+  <Property name="baseUrl" type="string" optional>
+    Override the base URL entirely, bypassing the `environment` preset. Useful for proxies, mocking in tests, or pointing at a staging environment.
+
+    ```ts
+    createSslcommerzClient({
+      storeId: "...",
+      storePasswd: "...",
+      baseUrl: "https://mock.mycompany.internal",
+    });
+    ```
+
+    The trailing slash is normalised automatically.
+
+  </Property>
+  <Property name="fetch" type="typeof fetch" optional>
+    A custom `fetch` implementation. Defaults to the global `fetch` available in Node.js 18+ and all modern runtimes.
+
+    Pass a custom implementation for environments that do not have a global `fetch`, or when you need interceptors:
+
+    ```ts
+    import { fetch } from "undici";
+
+    createSslcommerzClient({
+      storeId: "...",
+      storePasswd: "...",
+      fetch,
+    });
+    ```
+
+  </Property>
+  <Property name="timeoutMs" type="number" optional defaultValue="30000">
+    Maximum milliseconds to wait for a response before aborting. The timeout applies per-request and is implemented with `AbortController`.
+
+    Set to a higher value for slow network conditions. Setting it too low may cause spurious failures on the live environment.
+
+  </Property>
+</Properties>
+
+## Environments
+
+| Environment | Base URL                           | TLS  | Purpose                |
+| ----------- | ---------------------------------- | ---- | ---------------------- |
+| `sandbox`   | `https://sandbox.sslcommerz.com`   | 1.2+ | Testing, no real money |
+| `live`      | `https://securepay.sslcommerz.com` | 1.2+ | Production             |
+
+SSLCommerz requires **TLS 1.2 or higher**. Verify your server supports it:
+
+```bash
+curl "https://sandbox.sslcommerz.com/public/tls/" -v
+```
+
+### Network requirements
+
+Your server must be able to reach SSLCommerz over TCP 443:
+
+| Environment | Outbound (your server → SSLCommerz)       |
+| ----------- | ----------------------------------------- |
+| Sandbox     | TCP 443 → 103.26.139.148, 103.132.153.148 |
+| Live        | TCP 443 → 103.26.139.87                   |
+
+SSLCommerz must also be able to reach your IPN endpoint over TCP 80 or 443:
+
+| Environment | Inbound (SSLCommerz → your IPN)               |
+| ----------- | --------------------------------------------- |
+| Sandbox     | TCP 80/443 from 103.26.139.81, 103.132.153.81 |
+| Live        | TCP 80/443 from 103.26.139.87                 |
+
+## Per-request options
+
+Every method on `client.core` and `client.invoice` accepts an optional second argument of type `SslcommerzRequestOptions`. These override client-level defaults for that single call.
+
+```ts
+const controller = new AbortController();
+
+const response = await client.core.createSession(input, {
+  signal: controller.signal, // cancel this specific request
+  validateResponse: true, // validate response schema for this call only
+});
+```
+
+<Properties>
+  <Property name="signal" type="AbortSignal" optional>
+    An `AbortSignal` to cancel the request. When the signal fires, the underlying fetch is aborted and the returned promise rejects with an abort error.
+
+    ```ts
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 5_000); // custom 5 s timeout
+
+    await client.core.createSession(input, { signal: controller.signal });
+    ```
+
+  </Property>
+  <Property name="validateResponse" type="boolean" optional>
+    Override the client-level `validateResponse` setting for this single request.
+
+    Useful when you want response validation only on specific calls:
+
+    ```ts
+    // Validate the IPN validation response in development
+    await client.core.validateOrder({ val_id }, {
+      validateResponse: process.env.NODE_ENV === "development",
+    });
+    ```
+
+  </Property>
+</Properties>
+
+## Client instance properties
+
+After creation, the client exposes two read-only properties:
+
+```ts
+const client = createSslcommerzClient({ ... });
+
+client.environment; // "sandbox" | "live"
+client.baseUrl;     // resolved base URL string (after normalisation)
+```
+
+These are useful for logging and debugging.

@@ -1,0 +1,410 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Create Session",
+  category: "Core API",
+  description:
+    "Initiate a payment session with client.core.createSession(). Returns a GatewayPageURL to redirect the customer to the SSLCommerz payment page.",
+});
+
+# Create Session
+
+`client.core.createSession()` creates a payment session on SSLCommerz and returns a `GatewayPageURL` that you redirect your customer to. This is the first step in every standard payment flow.
+
+**Underlying endpoint:** `POST gwprocess/v4/api.php`
+
+```ts
+const response = await client.core.createSession(input, options?);
+```
+
+`store_id` and `store_passwd` are injected automatically from the client credentials — do not include them in `input`.
+
+## Minimal example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+const response = await sslcommerz.core.createSession({
+  total_amount: 500,
+  currency: "BDT",
+  tran_id: `TXN_${Date.now()}`,
+  success_url: "https://yoursite.com/payment/success",
+  fail_url: "https://yoursite.com/payment/fail",
+  cancel_url: "https://yoursite.com/payment/cancel",
+  ipn_url: "https://yoursite.com/api/ipn",
+  product_name: "Premium Subscription",
+  product_category: "subscription",
+  product_profile: "non-physical-goods",
+  cus_name: "Jane Doe",
+  cus_email: "jane@example.com",
+  cus_add1: "123 Main Street",
+  cus_city: "Dhaka",
+  cus_postcode: "1207",
+  cus_country: "Bangladesh",
+  cus_phone: "01700000000",
+  shipping_method: "NO",
+  num_of_item: 1,
+});
+
+if (response.status === "SUCCESS" && response.GatewayPageURL) {
+  // Redirect the customer to complete payment
+  redirect(response.GatewayPageURL);
+}
+```
+
+## Input fields
+
+### Required fields
+
+<Properties>
+  <Property name="total_amount" type="number | string" required>
+    The payment amount. Must be between **10.00** and **500000.00** BDT (or equivalent in the selected currency). Accepts either a number or a decimal string with up to 2 decimal places.
+  </Property>
+  <Property name="currency" type="string" required>
+    3-letter ISO currency code. SSLCommerz supports: `BDT`, `USD`, `EUR`, `SGD`, `INR`, `MYR`, and others. Must be uppercase.
+  </Property>
+  <Property name="tran_id" type="string" required>
+    Your unique transaction ID (max 30 characters). You must generate a new unique value for every payment attempt. SSLCommerz rejects duplicate `tran_id` values.
+  </Property>
+  <Property name="success_url" type="string" required>
+    The URL SSLCommerz redirects the customer to after a successful payment. Must be a valid URL. SSLCommerz POSTs payment data to this URL.
+  </Property>
+  <Property name="fail_url" type="string" required>
+    The URL SSLCommerz redirects to when the payment fails. SSLCommerz POSTs payment data here as well.
+  </Property>
+  <Property name="cancel_url" type="string" required>
+    The URL SSLCommerz redirects to when the customer cancels.
+  </Property>
+  <Property name="product_name" type="string" required>
+    Product name(s), max 255 characters. Multiple products can be comma-separated.
+  </Property>
+  <Property name="product_category" type="string" required>
+    A category label for the product, max 50 characters (e.g. `"electronics"`, `"subscription"`).
+  </Property>
+  <Property name="product_profile" type="string" required>
+    Determines which conditional fields are required. One of:
+
+    | Value                | Use case                             |
+    | -------------------- | ------------------------------------ |
+    | `general`            | Default — most products              |
+    | `physical-goods`     | Tangible items that ship             |
+    | `non-physical-goods` | Digital/downloadable products        |
+    | `airline-tickets`    | Flight bookings                      |
+    | `travel-vertical`    | Hotel / accommodation                |
+    | `telecom-vertical`   | Mobile recharge / top-up             |
+
+  </Property>
+  <Property name="cus_name" type="string" required>
+    Customer full name, max 50 characters.
+  </Property>
+  <Property name="cus_email" type="string" required>
+    Customer email address, max 50 characters. Must be a valid email — validated by Zod before the request is sent.
+  </Property>
+  <Property name="cus_add1" type="string" required>
+    Customer address line 1, max 50 characters.
+  </Property>
+  <Property name="cus_city" type="string" required>
+    Customer city, max 50 characters.
+  </Property>
+  <Property name="cus_postcode" type="string" required>
+    Customer postcode / ZIP, max 30 characters.
+  </Property>
+  <Property name="cus_country" type="string" required>
+    Customer country name, max 50 characters (e.g. `"Bangladesh"`).
+  </Property>
+  <Property name="cus_phone" type="string" required>
+    Customer phone number, max 20 characters.
+  </Property>
+  <Property name="shipping_method" type='"YES" | "NO" | "Courier" | "SSLCOMMERZ_LOGISTIC"' required>
+    Controls whether shipping information is required and which logistic fields apply.
+
+    - `"NO"` — No shipping, digital goods or services.
+    - `"YES"` — Physical shipping. Requires all `ship_*` fields.
+    - `"Courier"` — Third-party courier, no extra fields required.
+    - `"SSLCOMMERZ_LOGISTIC"` — SSLCommerz logistics. Requires `ship_*` fields plus `num_of_item`, `weight_of_items`, `logistic_pickup_id`, `logistic_delivery_type`.
+
+  </Property>
+  <Property name="num_of_item" type="number | string" required>
+    Number of items in the cart. Required when `shipping_method` is `"SSLCOMMERZ_LOGISTIC"`.
+  </Property>
+</Properties>
+
+### Optional base fields
+
+<Properties>
+  <Property name="ipn_url" type="string" optional>
+    URL for SSLCommerz to POST the Instant Payment Notification (IPN) to. Strongly recommended — this is the most reliable way to receive payment confirmations. See [IPN Webhooks](/core/ipn).
+  </Property>
+  <Property name="cus_add2" type="string" optional>
+    Customer address line 2, max 50 characters.
+  </Property>
+  <Property name="cus_state" type="string" optional>
+    Customer state / division, max 50 characters.
+  </Property>
+  <Property name="cus_fax" type="string" optional>
+    Customer fax number, max 20 characters.
+  </Property>
+  <Property name="multi_card_name" type="string" optional>
+    Control which payment gateways are shown to the customer. Comma-separated list of gateway codes.
+
+    **Individual gateways:** `brac_visa`, `dbbl_visa`, `city_visa`, `ebl_visa`, `sbl_visa`, `brac_master`, `dbbl_master`, `city_master`, `ebl_master`, `sbl_master`, `city_amex`, `qcash`, `dbbl_nexus`, `bankasia`, `abbank`, `ibbl`, `mtbl`, `bkash`, `dbblmobilebanking`, `city`, `upay`, `tapnpay`
+
+    **Groups:** `internetbank`, `mobilebank`, `othercard`, `visacard`, `mastercard`, `amexcard`
+
+  </Property>
+  <Property name="allowed_bin" type="string" optional>
+    Comma-separated list of allowed card BINs (first 6 digits). All other cards are rejected at the gateway.
+  </Property>
+  <Property name="cart" type="array" optional>
+    Cart item details as a JSON array. Each item: `{"sku":"","product":"","quantity":"","amount":"","unit_price":""}`.
+  </Property>
+  <Property name="product_amount" type="number | string" optional>
+    Base product price, before VAT and discounts.
+  </Property>
+  <Property name="vat" type="number | string" optional>
+    VAT amount included in `total_amount`.
+  </Property>
+  <Property name="discount_amount" type="number | string" optional>
+    Discount amount deducted before arriving at `total_amount`.
+  </Property>
+  <Property name="convenience_fee" type="number | string" optional>
+    Additional convenience fee included in `total_amount`.
+  </Property>
+  <Property name="value_a" type="string" optional>
+    Custom metadata field, max 255 characters. Returned unchanged in IPN and validation responses.
+  </Property>
+  <Property name="value_b" type="string" optional>
+    Custom metadata field, max 255 characters.
+  </Property>
+  <Property name="value_c" type="string" optional>
+    Custom metadata field, max 255 characters.
+  </Property>
+  <Property name="value_d" type="string" optional>
+    Custom metadata field, max 255 characters.
+  </Property>
+</Properties>
+
+### EMI fields
+
+<Properties>
+  <Property name="emi_option" type="0 | 1" optional>
+    Set to `1` to enable EMI (Equal Monthly Installments) at the payment page.
+    When set to `1`, `emi_max_inst_option` becomes required.
+  </Property>
+  <Property name="emi_max_inst_option" type="number | string" optional>
+    Maximum number of EMI installments to offer (e.g. `3`, `6`, `9`). Required
+    when `emi_option = 1`.
+  </Property>
+  <Property name="emi_selected_inst" type="number | string" optional>
+    Pre-select a specific installment tenure on the payment page.
+  </Property>
+  <Property name="emi_allow_only" type="0 | 1" optional>
+    Set to `1` to show only EMI payment options, hiding non-EMI methods.
+  </Property>
+</Properties>
+
+### Shipping fields (required when `shipping_method = "YES"`)
+
+When `shipping_method` is `"YES"` or `"SSLCOMMERZ_LOGISTIC"`, the following fields become required. The Zod schema enforces this — missing fields throw a `SslcommerzValidationError` before the request is sent.
+
+<Properties>
+  <Property name="ship_name" type="string">
+    Shipping recipient name, max 50 characters.
+  </Property>
+  <Property name="ship_add1" type="string">
+    Shipping address line 1, max 50 characters.
+  </Property>
+  <Property name="ship_add2" type="string" optional>
+    Shipping address line 2, max 50 characters.
+  </Property>
+  <Property name="ship_area" type="string">
+    Shipping area / zone, max 50 characters.
+  </Property>
+  <Property name="ship_city" type="string">
+    Shipping city, max 50 characters.
+  </Property>
+  <Property name="ship_sub_city" type="string">
+    Shipping sub-city / district, max 50 characters.
+  </Property>
+  <Property name="ship_state" type="string" optional>
+    Shipping state, max 50 characters.
+  </Property>
+  <Property name="ship_postcode" type="string">
+    Shipping postcode, max 50 characters.
+  </Property>
+  <Property name="ship_country" type="string">
+    Shipping country name, max 50 characters.
+  </Property>
+</Properties>
+
+### SSLCOMMERZ_LOGISTIC additional fields
+
+These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_LOGISTIC"`:
+
+<Properties>
+  <Property name="weight_of_items" type="number | string">
+    Total weight of items in kilograms, decimal with up to 2 places.
+  </Property>
+  <Property name="logistic_pickup_id" type="string">
+    Pickup location ID from SSLCommerz logistics panel, max 50 characters.
+  </Property>
+  <Property name="logistic_delivery_type" type="string">
+    Delivery type code from SSLCommerz logistics, max 50 characters.
+  </Property>
+</Properties>
+
+### Airline ticket fields (required when `product_profile = "airline-tickets"`)
+
+<Properties>
+  <Property name="hours_till_departure" type="string">
+    Hours remaining until departure at time of booking, max 30 characters.
+  </Property>
+  <Property name="flight_type" type="string">
+    Type of flight (e.g. `"domestic"`, `"international"`), max 30 characters.
+  </Property>
+  <Property name="pnr" type="string">
+    Passenger Name Record (booking reference), max 50 characters.
+  </Property>
+  <Property name="journey_from_to" type="string">
+    Origin and destination (e.g. `"DAC-CGP"`), max 255 characters.
+  </Property>
+  <Property name="third_party_booking" type="string">
+    Indicates third-party booking (`"YES"` / `"NO"`), max 20 characters.
+  </Property>
+</Properties>
+
+### Travel / hotel fields (required when `product_profile = "travel-vertical"`)
+
+<Properties>
+  <Property name="hotel_name" type="string">
+    Hotel name, max 255 characters.
+  </Property>
+  <Property name="length_of_stay" type="string">
+    Number of nights (e.g. `"3"`), max 30 characters.
+  </Property>
+  <Property name="check_in_time" type="string">
+    Check-in date/time, max 30 characters.
+  </Property>
+  <Property name="hotel_city" type="string">
+    City where the hotel is located, max 50 characters.
+  </Property>
+</Properties>
+
+### Telecom fields (required when `product_profile = "telecom-vertical"`)
+
+<Properties>
+  <Property name="product_type" type="string">
+    Telecom product type (e.g. `"recharge"`, `"bundle"`), max 30 characters.
+  </Property>
+  <Property name="topup_number" type="string">
+    Mobile number to recharge, max 150 characters.
+  </Property>
+  <Property name="country_topup" type="string">
+    Country of the mobile number, max 30 characters.
+  </Property>
+</Properties>
+
+## Response
+
+<Properties>
+  <Property name="status" type="string">
+    `"SUCCESS"` if the session was created, `"FAILED"` otherwise. Always check
+    this before reading `GatewayPageURL`.
+  </Property>
+  <Property name="GatewayPageURL" type="string">
+    The URL to redirect the customer to. Only present when `status ===
+    "SUCCESS"`.
+  </Property>
+  <Property name="sessionkey" type="string" optional>
+    The session key. Use this with [Transaction Query by
+    Session](/core/transaction-query) to look up the payment later.
+  </Property>
+  <Property name="failedreason" type="string" optional>
+    Human-readable error message when `status === "FAILED"`.
+  </Property>
+  <Property name="redirectGatewayURL" type="string" optional>
+    Direct URL to the payment gateway (alternative to `GatewayPageURL`).
+  </Property>
+  <Property name="directPaymentURLBank" type="string" optional>
+    Direct URL for internet banking payment.
+  </Property>
+  <Property name="directPaymentURLCard" type="string" optional>
+    Direct URL for card payment.
+  </Property>
+  <Property name="directPaymentURL" type="string" optional>
+    Generic direct payment URL.
+  </Property>
+  <Property name="storeBanner" type="string" optional>
+    URL of your store banner image on the payment page.
+  </Property>
+  <Property name="storeLogo" type="string" optional>
+    URL of your store logo image on the payment page.
+  </Property>
+  <Property name="gw" type="object" optional>
+    Available payment gateways grouped by category.
+  </Property>
+  <Property name="desc" type="array" optional>
+    Descriptions of available gateways.
+  </Property>
+  <Property name="is_direct_pay_enable" type='"0" | "1"' optional>
+    Whether direct payment (without gateway page redirect) is enabled for this
+    store.
+  </Property>
+</Properties>
+
+## Physical goods example
+
+```ts
+const response = await sslcommerz.core.createSession({
+  total_amount: 1500,
+  currency: "BDT",
+  tran_id: "ORDER_123456",
+  success_url: "https://yoursite.com/payment/success",
+  fail_url: "https://yoursite.com/payment/fail",
+  cancel_url: "https://yoursite.com/payment/cancel",
+  ipn_url: "https://yoursite.com/api/ipn",
+  product_name: "Wireless Headphones",
+  product_category: "electronics",
+  product_profile: "physical-goods",
+  cus_name: "Rahim Uddin",
+  cus_email: "rahim@example.com",
+  cus_add1: "House 10, Road 5",
+  cus_city: "Dhaka",
+  cus_postcode: "1205",
+  cus_country: "Bangladesh",
+  cus_phone: "01711234567",
+  shipping_method: "YES",
+  num_of_item: 1,
+  ship_name: "Rahim Uddin",
+  ship_add1: "House 10, Road 5",
+  ship_area: "Dhanmondi",
+  ship_city: "Dhaka",
+  ship_sub_city: "Dhanmondi",
+  ship_postcode: "1205",
+  ship_country: "Bangladesh",
+  // pass your own DB order ID back through the custom value fields
+  value_a: "order_123456",
+});
+```
+
+## EMI example
+
+```ts
+const response = await sslcommerz.core.createSession({
+  // ... base fields
+  total_amount: 12000,
+  currency: "BDT",
+  product_profile: "physical-goods",
+  emi_option: 1,
+  emi_max_inst_option: 12, // offer up to 12-month EMI
+  emi_selected_inst: 6, // pre-select 6 months
+  shipping_method: "NO",
+  // ...
+});
+```
+
+<Warning>
+  Always store the `sessionkey` from the response alongside your `tran_id`. You
+  will need one of these to look up the transaction later via [Transaction
+  Query](/core/transaction-query).
+</Warning>

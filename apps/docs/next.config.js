@@ -23,21 +23,16 @@ const nextConfig = {
         pathname: "/f/*",
       },
       {
-        protocol: 'https',
-        hostname: '**', // Allows any hostname with HTTPS
+        protocol: "https",
+        hostname: "**", // Allows any hostname with HTTPS
       },
       {
-        protocol: 'http',
-        hostname: '**', // Allows any hostname with HTTP (use with caution)
+        protocol: "http",
+        hostname: "**", // Allows any hostname with HTTP (use with caution)
       },
     ],
   },
-  rewrites: async () => [
-    { source: "/auth-security", destination: "/concepts/auth-security" },
-    { source: "/errors", destination: "/concepts/error-handling" },
-    { source: "/regions-and-acl", destination: "/concepts/regions-acl" },
-    { source: "/theming", destination: "/concepts/theming" },
-  ],
+  rewrites: async () => [],
 };
 
 export default withSearch(withMDX(nextConfig));

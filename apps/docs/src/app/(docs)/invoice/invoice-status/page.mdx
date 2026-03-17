@@ -1,0 +1,131 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Invoice Status",
+  category: "Invoice API",
+  description:
+    "Check whether an invoice has been paid using client.invoice.invoiceStatus(). Returns the payment status and transaction details.",
+});
+
+# Invoice Status
+
+`client.invoice.invoiceStatus()` checks whether a specific invoice has been paid and returns the payment status along with transaction details.
+
+**Underlying endpoint:** `POST validator/api/v4/` with `action: "invoicePaymentStatus"` (automatically injected)
+
+```ts
+const status = await client.invoice.invoiceStatus(input, options?);
+```
+
+## When to use
+
+- Polling to check if an invoice has been paid (useful for admin dashboards)
+- As a fallback when IPN delivery is delayed
+- To display current invoice state to your users
+
+## Input
+
+<Properties>
+  <Property name="refer" type="string" required>
+    Your invoice reference code from the SSLCommerz merchant panel — the same
+    `refer` value used when creating the invoice. Max 30 characters.
+  </Property>
+  <Property name="invoice_id" type="string" required>
+    The invoice ID returned by `createInvoice()`. Max 50 characters.
+  </Property>
+</Properties>
+
+`store_id`, `store_passwd`, and `action` are automatically injected — do not include them.
+
+## Example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+const result = await sslcommerz.invoice.invoiceStatus({
+  refer: process.env.SSLCOMMERZ_INVOICE_REFER!,
+  invoice_id: storedInvoice.invoiceId,
+});
+
+switch (result.payment_status) {
+  case "VALID":
+  case "VALIDATED":
+    console.log("Invoice paid!", result.transaction);
+    break;
+  case "PENDING":
+    console.log("Payment in progress...");
+    break;
+  case "FAILED":
+    console.log("Payment failed.");
+    break;
+  default:
+    console.log("Status:", result.payment_status);
+}
+```
+
+## Polling example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+async function waitForPayment(invoiceId: string, refer: string) {
+  const MAX_POLLS = 20;
+  const POLL_INTERVAL_MS = 15_000; // 15 seconds
+
+  for (let i = 0; i < MAX_POLLS; i++) {
+    const result = await sslcommerz.invoice.invoiceStatus({
+      refer,
+      invoice_id: invoiceId,
+    });
+
+    if (
+      result.payment_status === "VALID" ||
+      result.payment_status === "VALIDATED"
+    ) {
+      return { paid: true, transaction: result.transaction };
+    }
+
+    if (result.payment_status === "FAILED") {
+      return { paid: false, reason: "failed" };
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+  }
+
+  return { paid: false, reason: "timeout" };
+}
+```
+
+## Response
+
+<Properties>
+  <Property name="status" type="string" optional>
+    API call status: `"success"` or `"failed"`.
+  </Property>
+  <Property name="payment_status" type="string" optional>
+    Invoice payment state:
+
+    | Value       | Meaning                                        |
+    | ----------- | ---------------------------------------------- |
+    | `VALID`     | Invoice paid and confirmed                     |
+    | `VALIDATED` | Paid, but already validated previously         |
+    | `PENDING`   | Payment in progress                            |
+    | `FAILED`    | Payment failed                                 |
+
+  </Property>
+  <Property name="invoice_id" type="string" optional>
+    The invoice ID, echoed back.
+  </Property>
+  <Property name="refer" type="string" optional>
+    The reference code, echoed back.
+  </Property>
+  <Property name="transaction" type="array" optional>
+    Array of transaction detail objects when `payment_status` is `VALID` or `VALIDATED`. Each object contains the standard transaction fields (amount, currency, card_type, bank_tran_id, etc.).
+  </Property>
+  <Property name="failedreason" type="string" optional>
+    Error message when `status === "failed"`.
+  </Property>
+  <Property name="APIConnect" type="string" optional>
+    Internal SSLCommerz connection status.
+  </Property>
+</Properties>

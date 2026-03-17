@@ -1,37 +1,154 @@
 import { docsMetadata } from "@/lib/utils";
 
 export const metadata = docsMetadata({
-  title: "Getting Started",
-  category: "Guides",
+  title: "Installation",
+  category: "Getting Started",
   description:
-    "Install the package, add environment values, and initialize Better SSLCommerz in your app.",
+    "Install better-sslcommerz, set up environment variables, create a client, and run your first payment session in minutes.",
 });
 
-# Getting Started
+# Installation
 
-This page shows the quickest path to set up Better SSLCommerz.
+This guide walks you from a fresh project to a working payment session in the sandbox environment.
 
-## Installation
+## Install the package
 
 ```bash
+npm install better-sslcommerz
+# or
 pnpm add better-sslcommerz
+# or
+yarn add better-sslcommerz
 ```
 
-## Basic setup
+## Set environment variables
 
-Create your payment client, then call it from a server route.
+Add your SSLCommerz credentials to your environment. For Next.js, put these in `.env.local`:
+
+```bash
+SSLCOMMERZ_STORE_ID=your_store_id
+SSLCOMMERZ_STORE_PASSWD=your_store_password
+```
+
+<Note>
+  These are **server-only** values. Never expose `SSLCOMMERZ_STORE_PASSWD` to
+  the browser. In Next.js App Router, only use the client inside Server
+  Components or Route Handlers.
+</Note>
+
+## Create a client
 
 ```ts
 import { createSslcommerzClient } from "better-sslcommerz";
 
-const sslcommerzClient = createSslcommerzClient({
+export const sslcommerz = createSslcommerzClient({
   storeId: process.env.SSLCOMMERZ_STORE_ID!,
   storePasswd: process.env.SSLCOMMERZ_STORE_PASSWD!,
-  environment: "sandbox",
+  environment: "sandbox", // switch to "live" for production
 });
 ```
 
+Create the client once and export it — it is stateless and safe to reuse across requests.
+
+## Initiate your first payment
+
+Call `client.core.createSession()` from a server Route Handler (or server action). The response contains a `GatewayPageURL` that you redirect the customer to.
+
+```ts
+// app/api/checkout/route.ts
+import { NextResponse } from "next/server";
+import { sslcommerz } from "@/lib/sslcommerz";
+
+export async function POST(request: Request) {
+  const body = await request.json();
+
+  const response = await sslcommerz.core.createSession({
+    total_amount: body.amount,
+    currency: "BDT",
+    tran_id: `TXN_${Date.now()}`, // must be unique per transaction
+    success_url: "https://yoursite.com/payment/success",
+    fail_url: "https://yoursite.com/payment/fail",
+    cancel_url: "https://yoursite.com/payment/cancel",
+    ipn_url: "https://yoursite.com/api/ipn",
+    product_name: body.productName,
+    product_category: "general",
+    product_profile: "general",
+    cus_name: body.customerName,
+    cus_email: body.customerEmail,
+    cus_add1: body.address,
+    cus_city: body.city,
+    cus_postcode: body.postcode,
+    cus_country: "Bangladesh",
+    cus_phone: body.phone,
+    shipping_method: "NO",
+    num_of_item: 1,
+  });
+
+  if (response.status !== "SUCCESS" || !response.GatewayPageURL) {
+    return NextResponse.json(
+      { error: response.failedreason ?? "Session creation failed" },
+      { status: 400 },
+    );
+  }
+
+  // Redirect the customer to the SSLCommerz payment page
+  return NextResponse.json({ url: response.GatewayPageURL });
+}
+```
+
+On the client side, redirect to the returned URL:
+
+```ts
+const res = await fetch("/api/checkout", {
+  method: "POST",
+  body: JSON.stringify(orderData),
+  headers: { "Content-Type": "application/json" },
+});
+const { url } = await res.json();
+window.location.href = url;
+```
+
+## Handle callbacks
+
+SSLCommerz will POST to your `success_url`, `fail_url`, and `cancel_url` after the payment attempt. Always validate the result using the [Validate Order](/core/validate-order) endpoint — do **not** trust the redirect alone.
+
+```ts
+// app/payment/success/route.ts
+import { NextResponse } from "next/server";
+import { sslcommerz } from "@/lib/sslcommerz";
+
+export async function POST(request: Request) {
+  const form = await request.formData();
+  const valId = form.get("val_id") as string;
+
+  const validation = await sslcommerz.core.validateOrder({ val_id: valId });
+
+  if (validation.status !== "VALID" && validation.status !== "VALIDATED") {
+    return NextResponse.redirect(new URL("/payment/failed", request.url));
+  }
+
+  // Mark order as paid in your database
+  // Always cross-check validation.amount and validation.tran_id
+
+  return NextResponse.redirect(new URL("/payment/thank-you", request.url));
+}
+```
+
+## Sandbox test credentials
+
+Use these card details when testing in the `sandbox` environment:
+
+| Network    | Card Number      | CVV | Expiry |
+| ---------- | ---------------- | --- | ------ |
+| VISA       | 4111111111111111 | 111 | 12/26  |
+| Mastercard | 5111111111111111 | 111 | 12/26  |
+| Amex       | 371111111111111  | 111 | 12/26  |
+
+**Mobile banking OTP:** `111111` or `123456`
+
 ## Next steps
 
-- Add callback endpoints for success and fail URLs.
-- Verify signatures using the server-side helper utilities.
+- [Configuration](/configuration) — Timeout, custom fetch, response validation options
+- [Create Session](/core/create-session) — Full field reference including shipping and product profiles
+- [IPN Webhooks](/core/ipn) — Handle async payment notifications reliably
+- [Error Handling](/errors) — Catch and narrow `SslcommerzHttpError` and `SslcommerzValidationError`

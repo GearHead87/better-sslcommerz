@@ -1,0 +1,102 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Cancel Invoice",
+  category: "Invoice API",
+  description:
+    "Cancel a pending invoice before payment using client.invoice.invoiceCancel(). Only unpaid invoices can be cancelled.",
+});
+
+# Cancel Invoice
+
+`client.invoice.invoiceCancel()` cancels a pending invoice that has not yet been paid. Once an invoice is cancelled, the payment link (`pay_url`) becomes invalid.
+
+**Underlying endpoint:** `POST validator/api/v4/` with `action: "invoiceCancellation"` (automatically injected)
+
+```ts
+const result = await client.invoice.invoiceCancel(input, options?);
+```
+
+<Warning>
+  You can only cancel invoices that have **not yet been paid**. If the invoice
+  has a `payment_status` of `VALID` or `VALIDATED`, cancellation will fail.
+  Check the invoice status first with
+  [`invoiceStatus()`](/invoice/invoice-status) if you are unsure.
+</Warning>
+
+## Input
+
+<Properties>
+  <Property name="refer" type="string" required>
+    Your invoice reference code from the SSLCommerz merchant panel — the same
+    `refer` value used when creating the invoice. Max 30 characters.
+  </Property>
+  <Property name="invoice_id" type="string" required>
+    The invoice ID returned by `createInvoice()`. Max 50 characters.
+  </Property>
+</Properties>
+
+`store_id`, `store_passwd`, and `action` are automatically injected.
+
+## Example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+import { SslcommerzHttpError } from "better-sslcommerz";
+
+async function cancelInvoice(invoiceId: string) {
+  // Optional: check status first to avoid cancelling a paid invoice
+  const currentStatus = await sslcommerz.invoice.invoiceStatus({
+    refer: process.env.SSLCOMMERZ_INVOICE_REFER!,
+    invoice_id: invoiceId,
+  });
+
+  if (
+    currentStatus.payment_status === "VALID" ||
+    currentStatus.payment_status === "VALIDATED"
+  ) {
+    throw new Error("Cannot cancel a paid invoice");
+  }
+
+  const result = await sslcommerz.invoice.invoiceCancel({
+    refer: process.env.SSLCOMMERZ_INVOICE_REFER!,
+    invoice_id: invoiceId,
+  });
+
+  if (result.status === "success" && result.payment_status === "CANCELLED") {
+    console.log("Invoice cancelled successfully");
+    await db.invoices.markAsCancelled(invoiceId);
+  } else {
+    console.error("Cancellation failed:", result.failedreason);
+  }
+}
+```
+
+## Response
+
+<Properties>
+  <Property name="status" type="string" optional>
+    API call status: `"success"` or `"failed"`.
+  </Property>
+  <Property name="payment_status" type="string" optional>
+    The invoice payment state after the operation:
+
+    | Value       | Meaning                                   |
+    | ----------- | ----------------------------------------- |
+    | `CANCELLED` | Invoice successfully cancelled            |
+    | `VALID`     | Invoice was already paid — cannot cancel  |
+
+  </Property>
+  <Property name="invoice_id" type="string" optional>
+    The invoice ID, echoed back.
+  </Property>
+  <Property name="refer" type="string" optional>
+    The reference code, echoed back.
+  </Property>
+  <Property name="failedreason" type="string" optional>
+    Error message when `status === "failed"`.
+  </Property>
+  <Property name="APIConnect" type="string" optional>
+    Internal SSLCommerz connection status.
+  </Property>
+</Properties>

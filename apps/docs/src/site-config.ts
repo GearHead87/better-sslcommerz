@@ -8,10 +8,36 @@ export interface NavGroup {
 
 export const navigation: NavGroup[] = [
   {
-    title: "Documentation",
+    title: "Getting Started",
     links: [
       { href: "/", title: "Introduction" },
-      { href: "/getting-started", title: "Getting Started" },
+      { href: "/getting-started", title: "Installation" },
+      { href: "/configuration", title: "Configuration" },
+    ],
+  },
+  {
+    title: "Core API",
+    links: [
+      { href: "/core/create-session", title: "Create Session" },
+      { href: "/core/ipn", title: "IPN Webhooks" },
+      { href: "/core/validate-order", title: "Validate Order" },
+      { href: "/core/refund", title: "Refunds" },
+      { href: "/core/transaction-query", title: "Transaction Query" },
+    ],
+  },
+  {
+    title: "Invoice API",
+    links: [
+      { href: "/invoice/create-invoice", title: "Create Invoice" },
+      { href: "/invoice/invoice-status", title: "Invoice Status" },
+      { href: "/invoice/invoice-cancel", title: "Cancel Invoice" },
+    ],
+  },
+  {
+    title: "Reference",
+    links: [
+      { href: "/errors", title: "Error Handling" },
+      { href: "/types", title: "TypeScript Types" },
     ],
   },
   {

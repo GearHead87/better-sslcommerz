@@ -1,0 +1,273 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Create Invoice",
+  category: "Invoice API",
+  description:
+    "Generate a shareable payment invoice link with client.invoice.createInvoice(). Includes QR code generation, email/SMS delivery options, and full field reference.",
+});
+
+# Create Invoice
+
+`client.invoice.createInvoice()` generates a payment invoice — a shareable link (and optionally a QR code) that you send to your customer. The customer clicks the link and completes payment on the SSLCommerz gateway. This flow is suitable for billing, payment reminders, and situations where the customer is not present at checkout.
+
+**Underlying endpoint:** `POST gwprocess/v4/invoice.php`
+
+```ts
+const invoice = await client.invoice.createInvoice(input, options?);
+```
+
+## How invoices differ from sessions
+
+| Feature                        | Create Session       | Create Invoice             |
+| ------------------------------ | -------------------- | -------------------------- |
+| Entry point                    | `createSession()`    | `createInvoice()`          |
+| Redirect at creation           | Yes (GatewayPageURL) | No — link sent to customer |
+| Shareable payment link         | No                   | Yes (`pay_url`)            |
+| QR code                        | No                   | Optional                   |
+| Email/SMS delivery             | No                   | Optional                   |
+| Required `refer` field         | No                   | Yes                        |
+| Required `acct_no` field       | No                   | Yes                        |
+| `SSLCOMMERZ_LOGISTIC` shipping | Supported            | Not supported              |
+
+## Example
+
+```ts
+import { sslcommerz } from "@/lib/sslcommerz";
+
+const invoice = await sslcommerz.invoice.createInvoice({
+  refer: process.env.SSLCOMMERZ_INVOICE_REFER!, // from SSLCommerz merchant panel
+  acct_no: "INV-2025-001", // your invoice/reference number
+  tran_id: `TXN_${Date.now()}`,
+  total_amount: 2500,
+  currency: "BDT",
+  product_name: "Consulting Services – March 2025",
+  product_category: "services",
+  product_profile: "non-physical-goods",
+  cus_name: "Karim Hossain",
+  cus_email: "karim@example.com",
+  cus_add1: "42 Gulshan Avenue",
+  cus_city: "Dhaka",
+  cus_postcode: "1212",
+  cus_country: "Bangladesh",
+  cus_phone: "01811234567",
+  shipping_method: "NO",
+  num_of_item: 1,
+  is_sent_email: "YES", // email the invoice link to the customer
+  is_sent_sms: "NO",
+  ipn_url: "https://yoursite.com/api/ipn",
+});
+
+if (invoice.status === "success") {
+  console.log("Invoice created:", invoice.invoice_id);
+  console.log("Payment link:", invoice.pay_url);
+  // Send pay_url to the customer however you prefer
+}
+```
+
+## Input fields
+
+### Required fields
+
+<Properties>
+  <Property name="refer" type="string" required>
+    The invoice reference code from your SSLCommerz merchant panel. This is
+    specific to your invoice configuration — different from your store
+    credentials. Max 30 characters. For sandbox, the value is `5B1F9DE4D82B6`.
+  </Property>
+  <Property name="acct_no" type="string" required>
+    Your internal invoice or reference number (e.g. `"INV-2025-001"`). Used to
+    identify the invoice in your system. Max 50 characters.
+  </Property>
+  <Property name="tran_id" type="string" required>
+    A unique transaction ID for this invoice. Max 30 characters.
+  </Property>
+  <Property name="total_amount" type="number | string" required>
+    The invoice amount. Decimal with up to 2 places.
+  </Property>
+  <Property name="currency" type="string" required>
+    3-letter ISO currency code (e.g. `"BDT"`).
+  </Property>
+  <Property name="product_name" type="string" required>
+    Product or service name, max 255 characters.
+  </Property>
+  <Property name="product_category" type="string" required>
+    Product category label, max 50 characters.
+  </Property>
+  <Property name="product_profile" type="string" required>
+    One of: `general`, `physical-goods`, `non-physical-goods`,
+    `airline-tickets`, `travel-vertical`, `telecom-vertical`. Controls which
+    conditional fields are required (same rules as `createSession`).
+  </Property>
+  <Property name="cus_name" type="string" required>
+    Customer full name, max 50 characters.
+  </Property>
+  <Property name="cus_email" type="string" required>
+    Customer email address. Required even if `is_sent_email` is `"NO"`. Used as
+    an identifier.
+  </Property>
+  <Property name="cus_add1" type="string" required>
+    Customer address line 1, max 50 characters.
+  </Property>
+  <Property name="cus_city" type="string" required>
+    Customer city, max 50 characters.
+  </Property>
+  <Property name="cus_postcode" type="string" required>
+    Customer postcode, max 30 characters.
+  </Property>
+  <Property name="cus_country" type="string" required>
+    Customer country, max 50 characters.
+  </Property>
+  <Property name="cus_phone" type="string" required>
+    Customer phone number, max 20 characters.
+  </Property>
+  <Property name="shipping_method" type='"YES" | "NO" | "Courier"' required>
+    Shipping method. Note: `"SSLCOMMERZ_LOGISTIC"` is **not** supported for
+    invoices. When `"YES"`, all `ship_*` fields become required.
+  </Property>
+  <Property name="num_of_item" type="number | string" required>
+    Number of items. When `shipping_method = "NO"`, this field must be omitted —
+    the Zod schema enforces this.
+  </Property>
+</Properties>
+
+### Delivery options
+
+<Properties>
+  <Property name="is_sent_email" type='"YES" | "NO" | "yes" | "no"' optional>
+    Set to `"YES"` to have SSLCommerz automatically email the invoice link to
+    `cus_email`.
+  </Property>
+  <Property name="is_sent_sms" type='"YES" | "NO" | "yes" | "no"' optional>
+    Set to `"YES"` to have SSLCommerz automatically SMS the invoice link to
+    `cus_phone`.
+  </Property>
+  <Property
+    name="is_bangla_qr_enabled"
+    type='"YES" | "NO" | "yes" | "no"'
+    optional
+  >
+    Set to `"YES"` to include a Bangla QR code in the response (`bangla_qr_code`
+    field).
+  </Property>
+  <Property name="ipn_url" type="string" optional>
+    URL for SSLCommerz to POST the IPN to when the invoice is paid.
+  </Property>
+</Properties>
+
+### Optional fields
+
+<Properties>
+  <Property name="cus_add2" type="string" optional>
+    Customer address line 2, max 50 characters.
+  </Property>
+  <Property name="cus_state" type="string" optional>
+    Customer state, max 50 characters.
+  </Property>
+  <Property name="cus_fax" type="string" optional>
+    Customer fax, max 20 characters.
+  </Property>
+  <Property name="cart" type="array" optional>
+    Cart items array: `[{"sku":"","product":"","quantity":"","amount":"","unit_price":""},...]`
+  </Property>
+  <Property name="product_amount" type="number | string" optional>
+    Base product amount.
+  </Property>
+  <Property name="vat" type="number | string" optional>
+    VAT amount.
+  </Property>
+  <Property name="discount_amount" type="number | string" optional>
+    Discount amount.
+  </Property>
+  <Property name="convenience_fee" type="number | string" optional>
+    Convenience fee.
+  </Property>
+  <Property name="value_a" type="string" optional>
+    Custom metadata, max 255 characters.
+  </Property>
+  <Property name="value_b" type="string" optional>
+    Custom metadata, max 255 characters.
+  </Property>
+  <Property name="value_c" type="string" optional>
+    Custom metadata, max 255 characters.
+  </Property>
+  <Property name="value_d" type="string" optional>
+    Custom metadata, max 255 characters.
+  </Property>
+</Properties>
+
+### EMI fields
+
+<Properties>
+  <Property name="emi_option" type="0 | 1" optional>
+    Set to `1` to enable EMI options. Requires `emi_max_inst_option` when
+    enabled.
+  </Property>
+  <Property name="emi_max_inst_option" type="number | string" optional>
+    Maximum EMI tenure in months. Required when `emi_option = 1`.
+  </Property>
+  <Property name="emi_selected_inst" type="number | string" optional>
+    Pre-selected EMI tenure.
+  </Property>
+  <Property name="emi_allow_only" type="0 | 1" optional>
+    `1` = show only EMI options.
+  </Property>
+</Properties>
+
+### Product profile conditional fields
+
+The same conditional fields from `createSession` apply here:
+
+- **`airline-tickets`**: `hours_till_departure`, `flight_type`, `pnr`, `journey_from_to`, `third_party_booking`
+- **`travel-vertical`**: `hotel_name`, `length_of_stay`, `check_in_time`, `hotel_city`
+- **`telecom-vertical`**: `product_type`, `topup_number`, `country_topup`
+
+### Shipping fields (required when `shipping_method = "YES"`)
+
+`ship_name`, `ship_add1`, `ship_city`, `ship_postcode`, `ship_country` are all required when `shipping_method = "YES"`. Optional: `ship_add2`, `ship_state`.
+
+## Response
+
+<Properties>
+  <Property name="status" type="string" required>
+    `"success"` if the invoice was created, `"failed"` otherwise.
+  </Property>
+  <Property name="invoice_id" type="string" optional>
+    The invoice ID assigned by SSLCommerz. Store this — you need it for [Invoice
+    Status](/invoice/invoice-status) and [Cancel
+    Invoice](/invoice/invoice-cancel).
+  </Property>
+  <Property name="pay_url" type="string" optional>
+    The payment link to share with your customer. Only present on success.
+  </Property>
+  <Property name="invoice_refer" type="string" optional>
+    The `refer` value used, echoed back.
+  </Property>
+  <Property name="qr_image_url" type="string" optional>
+    URL of a QR code image that links to `pay_url`.
+  </Property>
+  <Property name="qr_image_pay_url" type="string" optional>
+    Direct QR code payment URL, max 255 characters.
+  </Property>
+  <Property name="bangla_qr_code" type="string" optional>
+    Bangla QR code content string. Only present when `is_bangla_qr_enabled =
+    "YES"`.
+  </Property>
+  <Property name="email_sending_status" type="string" optional>
+    Email delivery status: `"YES"` (sent), `"NO"` (not requested), `"FAILED"`,
+    or `"NOT_READY"`.
+  </Property>
+  <Property name="sms_sending_status" type="string" optional>
+    SMS delivery status: `"YES"` (sent), `"NO"` (not requested), `"FAILED"`, or
+    `"NOT_READY"`.
+  </Property>
+  <Property name="error_reason" type="string" optional>
+    Error message when `status === "failed"`.
+  </Property>
+</Properties>
+
+<Warning>
+  Store the `invoice_id` from the response. You need it to check payment status
+  with [`invoiceStatus()`](/invoice/invoice-status) and to cancel the invoice
+  with [`invoiceCancel()`](/invoice/invoice-cancel).
+</Warning>

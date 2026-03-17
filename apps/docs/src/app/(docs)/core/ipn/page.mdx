@@ -1,0 +1,232 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "IPN Webhooks",
+  category: "Core API",
+  description:
+    "Handle Instant Payment Notifications (IPN) from SSLCommerz using client.core.parseIpnPayload(). Includes route handler examples, payload field reference, and security checklist.",
+});
+
+# IPN Webhooks
+
+**IPN (Instant Payment Notification)** is SSLCommerz's server-to-server webhook. After every payment attempt — successful or not — SSLCommerz POSTs a payload to your `ipn_url`. This is the most reliable way to receive payment confirmations because it does not depend on the customer's browser completing a redirect.
+
+<Warning>
+  IPN alone is **not** sufficient to confirm a payment. Always call
+  [`validateOrder`](/core/validate-order) with the `val_id` from the IPN payload
+  before marking an order as paid. The IPN payload itself is not
+  cryptographically verified by this library.
+</Warning>
+
+## How it works
+
+1. Customer completes (or fails) payment on SSLCommerz gateway.
+2. SSLCommerz POSTs the payment result to your `ipn_url`.
+3. Your server receives the POST, parses it with `parseIpnPayload()`, and extracts the `val_id`.
+4. Your server calls `validateOrder({ val_id })` to confirm the payment against SSLCommerz's backend.
+5. If validation passes, you mark the order as paid in your database.
+
+## parseIpnPayload
+
+```ts
+const ipnPayload = client.core.parseIpnPayload(rawBody);
+```
+
+`parseIpnPayload(payload: unknown): IpnPayload`
+
+- Accepts any unknown value (raw POST body, parsed JSON object, etc.)
+- Validates the shape against the `ipnPayloadSchema` Zod schema
+- **Always** validates — there is no `validateResponse` toggle for this method
+- Throws `SslcommerzValidationError` with `stage: "request"` if validation fails
+
+## Route handler example (Next.js App Router)
+
+```ts
+// app/api/ipn/route.ts
+import type { IpnPayload } from "better-sslcommerz";
+import { NextResponse } from "next/server";
+import { sslcommerz } from "@/lib/sslcommerz";
+import { SslcommerzValidationError } from "better-sslcommerz";
+
+export async function POST(request: Request) {
+  // Parse the form-encoded body SSLCommerz sends
+  const formData = await request.formData();
+  const rawPayload = Object.fromEntries(formData.entries());
+
+  let ipn: IpnPayload;
+  try {
+    ipn = sslcommerz.core.parseIpnPayload(rawPayload);
+  } catch (error) {
+    if (error instanceof SslcommerzValidationError) {
+      console.error("Invalid IPN payload", error.issues);
+      return NextResponse.json({ received: false }, { status: 400 });
+    }
+    throw error;
+  }
+
+  // Only proceed if the IPN status indicates a payment was attempted
+  if (ipn.status !== "VALID") {
+    console.log(`IPN received with status: ${ipn.status}`, ipn.tran_id);
+    return NextResponse.json({ received: true });
+  }
+
+  // Validate with SSLCommerz backend before touching the DB
+  const validation = await sslcommerz.core.validateOrder({
+    val_id: ipn.val_id,
+  });
+
+  if (validation.status !== "VALID" && validation.status !== "VALIDATED") {
+    console.warn("Order validation failed", validation.status, ipn.tran_id);
+    return NextResponse.json({ received: false }, { status: 400 });
+  }
+
+  // Cross-check amount and tran_id against your own records
+  const order = await db.orders.findByTranId(validation.tran_id);
+  if (!order) {
+    return NextResponse.json({ received: false }, { status: 404 });
+  }
+
+  if (Number(validation.amount) !== order.amount) {
+    console.error("Amount mismatch!", {
+      expected: order.amount,
+      received: validation.amount,
+    });
+    return NextResponse.json({ received: false }, { status: 400 });
+  }
+
+  // If risk_level is 1, hold fulfilment and investigate
+  if (ipn.risk_level === "1" || ipn.risk_level === 1) {
+    await db.orders.markAsRisky(order.id);
+    return NextResponse.json({ received: true });
+  }
+
+  // All checks passed — mark the order as paid
+  await db.orders.markAsPaid(order.id, {
+    valId: validation.val_id,
+    bankTranId: ipn.bank_tran_id,
+    cardType: ipn.card_type,
+  });
+
+  return NextResponse.json({ received: true });
+}
+```
+
+## IPN payload fields
+
+<Properties>
+  <Property name="status" type="string" required>
+    Payment status. One of:
+
+    | Value          | Meaning                                    |
+    | -------------- | ------------------------------------------ |
+    | `VALID`        | Payment succeeded — proceed to validate    |
+    | `FAILED`       | Payment failed at gateway                  |
+    | `CANCELLED`    | Customer cancelled payment                 |
+    | `EXPIRED`      | Payment session timed out                  |
+    | `UNATTEMPTED`  | Customer did not choose a payment channel  |
+
+  </Property>
+  <Property name="tran_id" type="string" required>
+    Your transaction ID from the original `createSession` call. Use this to look up the order in your database.
+  </Property>
+  <Property name="val_id" type="string" required>
+    Validation ID issued by SSLCommerz. Pass this to `validateOrder()` to confirm the payment.
+  </Property>
+  <Property name="tran_date" type="string" required>
+    Date and time the payment was completed.
+  </Property>
+  <Property name="amount" type="string" required>
+    Payment amount. Cross-check this against your order record after validation.
+  </Property>
+  <Property name="store_amount" type="string" required>
+    Net amount credited to your account after SSLCommerz fees.
+  </Property>
+  <Property name="card_type" type="string" required>
+    Payment gateway name (e.g. `"VISA"`, `"bKash"`, `"DBBL Nexus"`).
+  </Property>
+  <Property name="currency" type="string" required>
+    3-letter currency code of the transaction.
+  </Property>
+  <Property name="bank_tran_id" type="string" optional>
+    Bank or gateway transaction reference. Required for initiating refunds later.
+  </Property>
+  <Property name="card_no" type="string" optional>
+    Masked card number or mobile banking account reference.
+  </Property>
+  <Property name="card_issuer" type="string" optional>
+    Issuing bank name.
+  </Property>
+  <Property name="card_brand" type="string" optional>
+    Card network: `VISA`, `MASTER`, `AMEX`, `IB`, `MOBILE BANKING`.
+  </Property>
+  <Property name="card_issuer_country" type="string" optional>
+    Country of the issuing bank.
+  </Property>
+  <Property name="card_issuer_country_code" type="string" optional>
+    2-letter country code of the issuing bank.
+  </Property>
+  <Property name="currency_type" type="string" optional>
+    Original currency code when currency conversion occurred.
+  </Property>
+  <Property name="currency_amount" type="string" optional>
+    Original amount before currency conversion.
+  </Property>
+  <Property name="currency_rate" type="string" optional>
+    Exchange rate applied during conversion.
+  </Property>
+  <Property name="base_fair" type="string" optional>
+    Base fare amount (relevant for airline tickets).
+  </Property>
+  <Property name="value_a" type="string" optional>
+    Custom metadata you passed in `createSession`. Returned unchanged.
+  </Property>
+  <Property name="value_b" type="string" optional>
+    Custom metadata from `createSession`.
+  </Property>
+  <Property name="value_c" type="string" optional>
+    Custom metadata from `createSession`.
+  </Property>
+  <Property name="value_d" type="string" optional>
+    Custom metadata from `createSession`.
+  </Property>
+  <Property name="store_id" type="string" optional>
+    Your store ID, echoed back in the payload.
+  </Property>
+  <Property name="verify_sign" type="string" optional>
+    Validation signature from SSLCommerz. Can be used for independent payload verification.
+  </Property>
+  <Property name="verify_key" type="string" optional>
+    Key list used to compute `verify_sign`.
+  </Property>
+  <Property name="risk_level" type='"0" | "1"' optional>
+    `"0"` means the transaction is considered safe. `"1"` means SSLCommerz flagged it as potentially risky — hold fulfilment and verify the customer manually.
+  </Property>
+  <Property name="risk_title" type="string" optional>
+    Human-readable description of the risk flag.
+  </Property>
+  <Property name="cus_fax" type="string" optional>
+    Customer fax number if provided during session creation.
+  </Property>
+</Properties>
+
+## Security checklist
+
+**Before marking any order as paid after receiving an IPN:**
+
+1. **Call `validateOrder`** — validate the `val_id` against SSLCommerz's backend. The IPN payload alone is not a confirmation.
+2. **Check `validation.status`** — must be `"VALID"` or `"VALIDATED"`. Any other value means the payment is not confirmed.
+3. **Cross-check `amount`** — compare `validation.amount` against the amount stored in your database for this `tran_id`. Amount tampering is possible.
+4. **Cross-check `tran_id`** — confirm the transaction ID belongs to an order in your system.
+5. **Check `risk_level`** — if `risk_level = "1"` or `1`, hold delivery and contact the customer to verify identity before fulfilling.
+6. **Idempotency** — the same IPN may be delivered more than once. Guard against double-fulfilment by checking if the order is already marked as paid before updating.
+
+## Firewall / IP requirements
+
+Your IPN endpoint must be reachable from the internet. SSLCommerz sends IPN from these IP addresses:
+
+| Environment | Source IPs (inbound to your server)            |
+| ----------- | ---------------------------------------------- |
+| Sandbox     | `103.26.139.81`, `103.132.153.81` (TCP 80/443) |
+| Live        | `103.26.139.87` (TCP 80/443)                   |
+
+If your server is behind a firewall, whitelist these IPs for inbound connections on port 80 and 443.
