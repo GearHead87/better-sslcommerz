@@ -19,8 +19,6 @@ import { Link } from "next-view-transitions";
 
 import { Tag } from "./Tag";
 
-export * from "./UploadThing";
-
 export { Button } from "@/components/Button";
 export { CodeGroup, Code as code, Pre as pre } from "@/components/Code";
 
