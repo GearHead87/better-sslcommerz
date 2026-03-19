@@ -4,47 +4,35 @@ export const metadata = docsMetadata({
   title: "Introduction",
   category: "Getting Started",
   description:
-    "better-sslcommerz is a type-safe TypeScript client for the SSLCommerz payment gateway, with Zod-validated schemas, full IPN support, and two clean API namespaces.",
+    "better-sslcommerz is a production-ready TypeScript SDK for SSLCommerz with typed methods, schema validation, and complete coverage of payment, refund, transaction, and invoice APIs.",
 });
 
 # Introduction
 
-`better-sslcommerz` is a TypeScript-first client for the [SSLCommerz](https://developer.sslcommerz.com/doc/v4/) payment gateway — Bangladesh's most widely used payment processing platform.
+`better-sslcommerz` is a TypeScript SDK for the [SSLCommerz](https://developer.sslcommerz.com/doc/v4/) gateway. It gives you a clean, strongly typed integration layer over SSLCommerz v4 so your payment flow is easier to build, test, and maintain.
 
-It wraps the raw SSLCommerz REST API with full type safety, Zod-validated request/response schemas, and a clean two-namespace design so you can integrate payment flows without dealing with raw `fetch` calls or untyped responses.
+Instead of manually building form-encoded payloads and handling loosely typed responses, you work with typed methods and consistent error handling.
 
-## What you get
+## Why teams use it
 
-- **Type-safe client** — Every method input and output is fully typed. TypeScript catches mistakes before runtime.
-- **Zod validation** — All request payloads are validated before sending. Enable `validateResponse` to also validate API responses against schemas.
-- **Two API namespaces** — `client.core` for standard payments, IPN, validation, refunds, and transaction queries; `client.invoice` for invoice-based payment flows.
-- **IPN payload parser** — `client.core.parseIpnPayload()` validates and types the raw POST body from SSLCommerz webhook callbacks.
-- **Three error classes** — `SslcommerzError`, `SslcommerzHttpError`, and `SslcommerzValidationError` give you precise control over error handling.
-- **Bring your own `fetch`** — Pass a custom `fetch` implementation (e.g. `undici`) via the `fetch` option.
-- **Timeout support** — Built-in request timeout with `AbortSignal` propagation and per-request cancellation.
-- **Sandbox & live environments** — Switch between environments with a single `environment` option.
+- **End-to-end API coverage** - Create sessions, validate orders, process refunds, query transactions, and manage invoices.
+- **Type-safe request and response models** - Method input/output is fully typed for safer integrations.
+- **Schema-backed validation** - Request validation is built in, and response validation is available when you enable `validateResponse`.
+- **IPN handling support** - Parse and validate incoming webhook payloads with `parseIpnPayload()`.
+- **Operational controls** - Configurable timeout, custom `fetch`, and per-request abort support.
+- **Structured errors** - Handle failures cleanly with `SslcommerzError`, `SslcommerzHttpError`, and `SslcommerzValidationError`.
 
-## Package structure
+## API coverage
 
-The main package `better-sslcommerz` exposes two API namespaces on the client object:
+The SDK maps directly to the key SSLCommerz v4 flows used in production:
 
-```
-client.core
-  ├── createSession()          Initiate a payment session → redirect to gateway
-  ├── validateOrder()          Validate a transaction after IPN / redirect
-  ├── refundInitiate()         Initiate a refund for a completed transaction
-  ├── refundStatus()           Check the status of an in-progress refund
-  ├── transactionQueryBySession()   Look up a transaction by session key
-  ├── transactionQueryByTranId()    Look up transactions by transaction ID
-  └── parseIpnPayload()        Parse and validate an IPN webhook payload
+- **Payment session** - `gwprocess/v4/api.php`
+- **Order validation** - `validator/api/validationserverAPI.php`
+- **Refund and transaction query** - `validator/api/merchantTransIDvalidationAPI.php`
+- **Invoice create** - `gwprocess/v4/invoice.php`
+- **Invoice status/cancel** - `validator/api/v4/`
 
-client.invoice
-  ├── createInvoice()          Create a shareable payment invoice link
-  ├── invoiceStatus()          Check whether an invoice has been paid
-  └── invoiceCancel()          Cancel a pending invoice
-```
-
-The `@better-sslcommerz/validators` package — which ships all Zod schemas and inferred TypeScript types — is re-exported directly from `better-sslcommerz`, so you only need one install.
+This keeps your application code aligned with the official gateway behavior while avoiding repetitive low-level HTTP handling.
 
 ## Environments
 
@@ -53,16 +41,16 @@ The `@better-sslcommerz/validators` package — which ships all Zod schemas and 
 | `sandbox`   | `https://sandbox.sslcommerz.com`   | Test payments, no real money  |
 | `live`      | `https://securepay.sslcommerz.com` | Production, real transactions |
 
-SSLCommerz requires **TLS 1.2 or higher**. You can verify your server supports it with:
+SSLCommerz requires **TLS 1.2 or higher**. Verify from your server with:
 
 ```bash
 curl "https://sandbox.sslcommerz.com/public/tls/" -v
 ```
 
-## Where to go next
+## Start here
 
-- [Installation](/getting-started) — Install the package and create your first client
-- [Configuration](/configuration) — All client options explained
-- [Create Session](/core/create-session) — Start a payment flow
-- [IPN Webhooks](/core/ipn) — Handle SSLCommerz payment notifications
-- [Error Handling](/errors) — Understand the error types
+- [Installation](/getting-started) - Install the SDK and run your first sandbox payment session
+- [Configuration](/configuration) - Configure environment, timeout, response validation, and custom fetch
+- [Create Session](/core/create-session) - Build checkout initiation with required request fields
+- [Validate Order](/core/validate-order) - Confirm successful payments before marking orders paid
+- [IPN Webhooks](/core/ipn) - Handle asynchronous payment notifications reliably
