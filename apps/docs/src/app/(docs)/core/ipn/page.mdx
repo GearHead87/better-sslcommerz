@@ -135,10 +135,10 @@ export async function POST(request: Request) {
   <Property name="tran_date" type="string" required>
     Date and time the payment was completed.
   </Property>
-  <Property name="amount" type="string" required>
+  <Property name="amount" type="number | string" required>
     Payment amount. Cross-check this against your order record after validation.
   </Property>
-  <Property name="store_amount" type="string" required>
+  <Property name="store_amount" type="number | string" required>
     Net amount credited to your account after SSLCommerz fees.
   </Property>
   <Property name="card_type" type="string" required>
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
   <Property name="currency_type" type="string" optional>
     Original currency code when currency conversion occurred.
   </Property>
-  <Property name="currency_amount" type="string" optional>
+  <Property name="currency_amount" type="number | string" optional>
     Original amount before currency conversion.
   </Property>
   <Property name="currency_rate" type="string" optional>
@@ -198,8 +198,8 @@ export async function POST(request: Request) {
   <Property name="verify_key" type="string" optional>
     Key list used to compute `verify_sign`.
   </Property>
-  <Property name="risk_level" type='"0" | "1"' optional>
-    `"0"` means the transaction is considered safe. `"1"` means SSLCommerz flagged it as potentially risky — hold fulfilment and verify the customer manually.
+  <Property name="risk_level" type='"0" | "1" | 0 | 1' optional>
+    `"0"`/`0` means the transaction is considered safe. `"1"`/`1` means SSLCommerz flagged it as potentially risky - hold fulfilment and verify the customer manually.
   </Property>
   <Property name="risk_title" type="string" optional>
     Human-readable description of the risk flag.

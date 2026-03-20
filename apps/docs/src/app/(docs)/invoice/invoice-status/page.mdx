@@ -99,7 +99,7 @@ async function waitForPayment(invoiceId: string, refer: string) {
 ## Response
 
 <Properties>
-  <Property name="status" type="string" optional>
+  <Property name="status" type="string" required>
     API call status: `"success"` or `"failed"`.
   </Property>
   <Property name="payment_status" type="string" optional>

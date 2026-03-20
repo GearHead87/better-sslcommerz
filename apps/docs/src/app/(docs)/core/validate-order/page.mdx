@@ -31,6 +31,12 @@ Call `validateOrder` in **two places**:
     The validation ID from the IPN payload (`ipn.val_id`) or from the
     success/fail redirect POST body. Max 50 characters.
   </Property>
+  <Property name="format" type='"json" | "xml"' optional>
+    Response format requested from SSLCommerz. Defaults to `"json"`.
+  </Property>
+  <Property name="v" type="string" optional>
+    Reserved field accepted by the endpoint.
+  </Property>
 </Properties>
 
 `store_id` and `store_passwd` are automatically injected from the client — do not include them.
@@ -44,7 +50,6 @@ import { sslcommerz } from "@/lib/sslcommerz";
 export async function POST(request: Request) {
   const form = await request.formData();
   const valId = form.get("val_id") as string;
-  const tranId = form.get("tran_id") as string;
 
   const validation = await sslcommerz.core.validateOrder({ val_id: valId });
 
@@ -132,10 +137,10 @@ export async function POST(request: Request) {
   <Property name="tran_date" type="string" required>
     Date and time of the transaction.
   </Property>
-  <Property name="amount" type="string" required>
+  <Property name="amount" type="number | string" required>
     The validated payment amount. **Always cross-check this against the amount in your database.**
   </Property>
-  <Property name="store_amount" type="string" required>
+  <Property name="store_amount" type="number | string" required>
     Net amount credited to your account after SSLCommerz charges.
   </Property>
   <Property name="currency" type="string" required>
@@ -165,7 +170,7 @@ export async function POST(request: Request) {
   <Property name="currency_type" type="string" optional>
     Original currency code before conversion.
   </Property>
-  <Property name="currency_amount" type="string" optional>
+  <Property name="currency_amount" type="number | string" optional>
     Original amount before currency conversion.
   </Property>
   <Property name="currency_rate" type="string" optional>
@@ -177,7 +182,7 @@ export async function POST(request: Request) {
   <Property name="emi_instalment" type="string" optional>
     EMI tenure in months if the customer paid via EMI.
   </Property>
-  <Property name="emi_amount" type="string" optional>
+  <Property name="emi_amount" type="number | string" optional>
     Monthly EMI instalment amount.
   </Property>
   <Property name="emi_description" type="string" optional>
@@ -186,10 +191,10 @@ export async function POST(request: Request) {
   <Property name="emi_issuer" type="string" optional>
     EMI issuing bank.
   </Property>
-  <Property name="discount_amount" type="string" optional>
+  <Property name="discount_amount" type="number | string" optional>
     Discount applied to this transaction.
   </Property>
-  <Property name="discount_percentage" type="string" optional>
+  <Property name="discount_percentage" type="number | string" optional>
     Discount percentage.
   </Property>
   <Property name="discount_remarks" type="string" optional>
@@ -208,7 +213,7 @@ export async function POST(request: Request) {
     Custom value from `createSession`.
   </Property>
   <Property name="risk_level" type="string" optional>
-    `"0"` = safe. `"1"` = risky — hold fulfilment and verify customer identity.
+    Risk level returned by SSLCommerz. In practice, `"0"` = safe and `"1"` = risky.
   </Property>
   <Property name="risk_title" type="string" optional>
     Human-readable description of the risk assessment.

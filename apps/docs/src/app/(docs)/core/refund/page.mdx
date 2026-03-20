@@ -54,6 +54,12 @@ To initiate a refund, you need the `bank_tran_id` from the [Order Validation](/c
   <Property name="refe_id" type="string" optional>
     Optional internal reference ID, max 50 characters.
   </Property>
+  <Property name="format" type='"json" | "xml"' optional>
+    Response format requested from SSLCommerz. Defaults to `"json"`.
+  </Property>
+  <Property name="v" type="string" optional>
+    Optional version/reserved field accepted by the endpoint.
+  </Property>
 </Properties>
 
 `store_id` and `store_passwd` are injected automatically.
@@ -130,6 +136,9 @@ After initiating a refund, poll `refundStatus()` using the `refund_ref_id` from 
 <Properties>
   <Property name="refund_ref_id" type="string" required>
     The refund reference ID returned by `refundInitiate()`. Max 50 characters.
+  </Property>
+  <Property name="format" type='"json" | "xml"' optional>
+    Response format requested from SSLCommerz. Defaults to `"json"`.
   </Property>
 </Properties>
 

@@ -119,13 +119,10 @@ if (response.status === "SUCCESS" && response.GatewayPageURL) {
     Controls whether shipping information is required and which logistic fields apply.
 
     - `"NO"` — No shipping, digital goods or services.
-    - `"YES"` — Physical shipping. Requires all `ship_*` fields.
+    - `"YES"` — Physical shipping. Requires `ship_name`, `ship_add1`, `ship_area`, `ship_city`, `ship_sub_city`, `ship_postcode`, and `ship_country`.
     - `"Courier"` — Third-party courier, no extra fields required.
-    - `"SSLCOMMERZ_LOGISTIC"` — SSLCommerz logistics. Requires `ship_*` fields plus `num_of_item`, `weight_of_items`, `logistic_pickup_id`, `logistic_delivery_type`.
+    - `"SSLCOMMERZ_LOGISTIC"` — SSLCommerz logistics. Requires the same shipping fields as `"YES"` plus `num_of_item`, `weight_of_items`, `logistic_pickup_id`, and `logistic_delivery_type`.
 
-  </Property>
-  <Property name="num_of_item" type="number | string" required>
-    Number of items in the cart. Required when `shipping_method` is `"SSLCOMMERZ_LOGISTIC"`.
   </Property>
 </Properties>
 
@@ -187,7 +184,7 @@ if (response.status === "SUCCESS" && response.GatewayPageURL) {
 ### EMI fields
 
 <Properties>
-  <Property name="emi_option" type="0 | 1" optional>
+  <Property name="emi_option" type='"0" | "1" | 0 | 1' optional>
     Set to `1` to enable EMI (Equal Monthly Installments) at the payment page.
     When set to `1`, `emi_max_inst_option` becomes required.
   </Property>
@@ -198,41 +195,41 @@ if (response.status === "SUCCESS" && response.GatewayPageURL) {
   <Property name="emi_selected_inst" type="number | string" optional>
     Pre-select a specific installment tenure on the payment page.
   </Property>
-  <Property name="emi_allow_only" type="0 | 1" optional>
+  <Property name="emi_allow_only" type='"0" | "1" | 0 | 1' optional>
     Set to `1` to show only EMI payment options, hiding non-EMI methods.
   </Property>
 </Properties>
 
-### Shipping fields (required when `shipping_method = "YES"`)
+### Shipping fields (required when `shipping_method = "YES"` or `"SSLCOMMERZ_LOGISTIC"`)
 
-When `shipping_method` is `"YES"` or `"SSLCOMMERZ_LOGISTIC"`, the following fields become required. The Zod schema enforces this — missing fields throw a `SslcommerzValidationError` before the request is sent.
+When `shipping_method` is `"YES"` or `"SSLCOMMERZ_LOGISTIC"`, the required shipping identity/address fields below must be provided. `ship_add2` and `ship_state` remain optional. The Zod schema enforces this — missing required fields throw a `SslcommerzValidationError` before the request is sent.
 
 <Properties>
-  <Property name="ship_name" type="string">
+  <Property name="ship_name" type="string" required>
     Shipping recipient name, max 50 characters.
   </Property>
-  <Property name="ship_add1" type="string">
+  <Property name="ship_add1" type="string" required>
     Shipping address line 1, max 50 characters.
   </Property>
   <Property name="ship_add2" type="string" optional>
     Shipping address line 2, max 50 characters.
   </Property>
-  <Property name="ship_area" type="string">
+  <Property name="ship_area" type="string" required>
     Shipping area / zone, max 50 characters.
   </Property>
-  <Property name="ship_city" type="string">
+  <Property name="ship_city" type="string" required>
     Shipping city, max 50 characters.
   </Property>
-  <Property name="ship_sub_city" type="string">
+  <Property name="ship_sub_city" type="string" required>
     Shipping sub-city / district, max 50 characters.
   </Property>
   <Property name="ship_state" type="string" optional>
     Shipping state, max 50 characters.
   </Property>
-  <Property name="ship_postcode" type="string">
+  <Property name="ship_postcode" type="string" required>
     Shipping postcode, max 50 characters.
   </Property>
-  <Property name="ship_country" type="string">
+  <Property name="ship_country" type="string" required>
     Shipping country name, max 50 characters.
   </Property>
 </Properties>
@@ -242,13 +239,16 @@ When `shipping_method` is `"YES"` or `"SSLCOMMERZ_LOGISTIC"`, the following fiel
 These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_LOGISTIC"`:
 
 <Properties>
-  <Property name="weight_of_items" type="number | string">
+  <Property name="num_of_item" type="number | string" required>
+    Number of items in the cart.
+  </Property>
+  <Property name="weight_of_items" type="number | string" required>
     Total weight of items in kilograms, decimal with up to 2 places.
   </Property>
-  <Property name="logistic_pickup_id" type="string">
+  <Property name="logistic_pickup_id" type="string" required>
     Pickup location ID from SSLCommerz logistics panel, max 50 characters.
   </Property>
-  <Property name="logistic_delivery_type" type="string">
+  <Property name="logistic_delivery_type" type="string" required>
     Delivery type code from SSLCommerz logistics, max 50 characters.
   </Property>
 </Properties>
@@ -256,19 +256,19 @@ These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_L
 ### Airline ticket fields (required when `product_profile = "airline-tickets"`)
 
 <Properties>
-  <Property name="hours_till_departure" type="string">
+  <Property name="hours_till_departure" type="string" required>
     Hours remaining until departure at time of booking, max 30 characters.
   </Property>
-  <Property name="flight_type" type="string">
+  <Property name="flight_type" type="string" required>
     Type of flight (e.g. `"domestic"`, `"international"`), max 30 characters.
   </Property>
-  <Property name="pnr" type="string">
+  <Property name="pnr" type="string" required>
     Passenger Name Record (booking reference), max 50 characters.
   </Property>
-  <Property name="journey_from_to" type="string">
+  <Property name="journey_from_to" type="string" required>
     Origin and destination (e.g. `"DAC-CGP"`), max 255 characters.
   </Property>
-  <Property name="third_party_booking" type="string">
+  <Property name="third_party_booking" type="string" required>
     Indicates third-party booking (`"YES"` / `"NO"`), max 20 characters.
   </Property>
 </Properties>
@@ -276,16 +276,16 @@ These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_L
 ### Travel / hotel fields (required when `product_profile = "travel-vertical"`)
 
 <Properties>
-  <Property name="hotel_name" type="string">
+  <Property name="hotel_name" type="string" required>
     Hotel name, max 255 characters.
   </Property>
-  <Property name="length_of_stay" type="string">
+  <Property name="length_of_stay" type="string" required>
     Number of nights (e.g. `"3"`), max 30 characters.
   </Property>
-  <Property name="check_in_time" type="string">
+  <Property name="check_in_time" type="string" required>
     Check-in date/time, max 30 characters.
   </Property>
-  <Property name="hotel_city" type="string">
+  <Property name="hotel_city" type="string" required>
     City where the hotel is located, max 50 characters.
   </Property>
 </Properties>
@@ -293,13 +293,13 @@ These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_L
 ### Telecom fields (required when `product_profile = "telecom-vertical"`)
 
 <Properties>
-  <Property name="product_type" type="string">
+  <Property name="product_type" type="string" required>
     Telecom product type (e.g. `"recharge"`, `"bundle"`), max 30 characters.
   </Property>
-  <Property name="topup_number" type="string">
+  <Property name="topup_number" type="string" required>
     Mobile number to recharge, max 150 characters.
   </Property>
-  <Property name="country_topup" type="string">
+  <Property name="country_topup" type="string" required>
     Country of the mobile number, max 30 characters.
   </Property>
 </Properties>
@@ -307,11 +307,11 @@ These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_L
 ## Response
 
 <Properties>
-  <Property name="status" type="string">
+  <Property name="status" type="string" required>
     `"SUCCESS"` if the session was created, `"FAILED"` otherwise. Always check
     this before reading `GatewayPageURL`.
   </Property>
-  <Property name="GatewayPageURL" type="string">
+  <Property name="GatewayPageURL" type="string" optional>
     The URL to redirect the customer to. Only present when `status ===
     "SUCCESS"`.
   </Property>
@@ -324,6 +324,9 @@ These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_L
   </Property>
   <Property name="redirectGatewayURL" type="string" optional>
     Direct URL to the payment gateway (alternative to `GatewayPageURL`).
+  </Property>
+  <Property name="redirectGatewayURLFailed" type="string" optional>
+    Fallback URL used when a direct gateway redirect cannot be prepared.
   </Property>
   <Property name="directPaymentURLBank" type="string" optional>
     Direct URL for internet banking payment.
@@ -346,7 +349,11 @@ These fields are **additionally** required when `shipping_method = "SSLCOMMERZ_L
   <Property name="desc" type="array" optional>
     Descriptions of available gateways.
   </Property>
-  <Property name="is_direct_pay_enable" type='"0" | "1"' optional>
+  <Property
+    name="is_direct_pay_enable"
+    type='"0" | "1" | "yes" | "no" | "YES" | "NO"'
+    optional
+  >
     Whether direct payment (without gateway page redirect) is enabled for this
     store.
   </Property>

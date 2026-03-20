@@ -37,6 +37,9 @@ const result = await client.core.transactionQueryBySession(input, options?);
     The `sessionkey` returned in the `createSession` response. Max 50
     characters.
   </Property>
+  <Property name="format" type='"json" | "xml"' optional>
+    Response format requested from SSLCommerz. Defaults to `"json"`.
+  </Property>
 </Properties>
 
 ### Example
@@ -74,10 +77,10 @@ console.log(result.amount); // payment amount
   <Property name="tran_date" type="string" required>
     Date and time of the transaction.
   </Property>
-  <Property name="amount" type="string" required>
+  <Property name="amount" type="number | string" required>
     Payment amount.
   </Property>
-  <Property name="store_amount" type="string" required>
+  <Property name="store_amount" type="number | string" required>
     Net amount after SSLCommerz fees.
   </Property>
   <Property name="currency" type="string" required>
@@ -107,7 +110,7 @@ console.log(result.amount); // payment amount
   <Property name="currency_type" type="string" optional>
     Original currency code before conversion.
   </Property>
-  <Property name="currency_amount" type="string" optional>
+  <Property name="currency_amount" type="number | string" optional>
     Original amount before conversion.
   </Property>
   <Property name="currency_rate" type="string" optional>
@@ -116,10 +119,10 @@ console.log(result.amount); // payment amount
   <Property name="base_fair" type="string" optional>
     Base fare amount.
   </Property>
-  <Property name="emi_instalment" type="string" optional>
+  <Property name="emi_instalment" type="number | string" optional>
     EMI tenure in months.
   </Property>
-  <Property name="emi_amount" type="string" optional>
+  <Property name="emi_amount" type="number | string" optional>
     Monthly EMI instalment amount.
   </Property>
   <Property name="emi_description" type="string" optional>
@@ -128,7 +131,10 @@ console.log(result.amount); // payment amount
   <Property name="emi_issuer" type="string" optional>
     EMI issuing bank.
   </Property>
-  <Property name="discount_percentage" type="string" optional>
+  <Property name="discount_amount" type="number | string" optional>
+    Discount amount applied to the transaction.
+  </Property>
+  <Property name="discount_percentage" type="number | string" optional>
     Discount percentage applied.
   </Property>
   <Property name="discount_remarks" type="string" optional>
@@ -146,14 +152,17 @@ console.log(result.amount); // payment amount
   <Property name="value_d" type="string" optional>
     Custom value from `createSession`.
   </Property>
-  <Property name="risk_level" type="string" optional>
-    `"0"` = safe, `"1"` = risky.
+  <Property name="risk_level" type='"0" | "1" | 0 | 1' optional>
+    Risk flag from SSLCommerz. `"0"`/`0` = safe, `"1"`/`1` = risky.
   </Property>
   <Property name="risk_title" type="string" optional>
     Risk assessment description.
   </Property>
   <Property name="validated_on" type="string" optional>
     Timestamp of first validation.
+  </Property>
+  <Property name="account_details" type="string" optional>
+    Account details returned by the payment channel.
   </Property>
   <Property name="gw_version" type="string" optional>
     SSLCommerz gateway version.
@@ -175,6 +184,9 @@ Querying by `tran_id` returns an **array** of transaction records because a cust
 <Properties>
   <Property name="tran_id" type="string" required>
     The transaction ID you supplied to `createSession`. Max 50 characters.
+  </Property>
+  <Property name="format" type='"json" | "xml"' optional>
+    Response format requested from SSLCommerz. Defaults to `"json"`.
   </Property>
 </Properties>
 
