@@ -4,9 +4,7 @@ import typographyPlugin from "@tailwindcss/typography";
 import typographyStyles from "./typography";
 
 export default {
-  content: [
-    "./src/**/*.{js,mjs,jsx,ts,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,mjs,jsx,ts,tsx,mdx}"],
   darkMode: "selector",
   theme: {
     fontSize: {
