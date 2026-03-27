@@ -1,0 +1,5 @@
+{
+  "extends": "@better-sslcommerz/tsconfig/base.json",
+  "include": ["convex", "*.ts"],
+  "exclude": ["node_modules"]
+}

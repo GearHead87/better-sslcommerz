@@ -53,3 +53,9 @@ dist/
 
 # tanstack
 .tanstack
+
+# local analysis clones
+demo-project/
+
+# demo-project (reference repos for convex component development)
+demo-project/
