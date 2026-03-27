@@ -1,44 +1,75 @@
 {
   "name": "@better-sslcommerz/convex",
+  "version": "0.0.0",
   "private": true,
+  "description": "A SSLCommerz component for Convex.",
   "type": "module",
+  "files": [
+    "dist",
+    "src",
+    "convex.config.js"
+  ],
   "exports": {
+    "./package.json": "./package.json",
     ".": {
-      "types": "./convex/_generated/api.d.ts",
-      "default": "./convex/_generated/api.js"
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
     },
-    "./dataModel": {
-      "types": "./convex/_generated/dataModel.d.ts"
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
     },
-    "./server": {
-      "types": "./convex/_generated/server.d.ts",
-      "default": "./convex/_generated/server.js"
+    "./test": "./src/test.ts",
+    "./_generated/component.js": {
+      "types": "./dist/component/_generated/component.d.ts"
     },
-    "./env": "./env.ts",
-    "./package.json": "./package.json"
+    "./convex.config": {
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    },
+    "./convex.config.js": {
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    }
   },
   "license": "MIT",
+  "types": "./dist/client/index.d.ts",
+  "module": "./dist/client/index.js",
   "scripts": {
-    "clean": "git clean -xdf .cache .turbo dist node_modules convex/_generated",
+    "build": "tsc --project ./tsconfig.build.json",
+    "build:codegen": "convex codegen --component-dir ./src/component && pnpm run build",
+    "clean": "git clean -xdf .cache .turbo dist node_modules *.tsbuildinfo",
     "dev": "convex dev --typecheck-components",
-    "deploy": "convex deploy",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "test": "vitest run --typecheck",
+    "test:watch": "vitest --typecheck",
     "typecheck": "tsc --noEmit"
   },
+  "peerDependencies": {
+    "convex": "^1.31.6",
+    "react": "^18 || ^19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "@t3-oss/env-core": "catalog:",
-    "convex": "catalog:",
-    "zod": "catalog:"
+    "better-sslcommerz": "0.0.0"
   },
   "devDependencies": {
     "@better-sslcommerz/eslint-config": "workspace:*",
     "@better-sslcommerz/prettier-config": "workspace:*",
     "@better-sslcommerz/tsconfig": "workspace:*",
     "@types/node": "catalog:",
+    "convex": "catalog:",
+    "convex-test": "0.0.41",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "3.2.4"
   },
   "prettier": "@better-sslcommerz/prettier-config"
 }

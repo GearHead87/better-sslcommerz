@@ -290,9 +290,9 @@ How to use this tracker:
 
 ## Phase 0 - baseline and migration setup
 
-- [ ] **P0.1** Freeze package target to `@better-sslcommerz/convex` and component name `sslcommerz`.
-- [ ] **P0.2** Mark current backend-style files as migration targets (`packages/convex/convex/*` -> `packages/convex/src/component/*`).
-- [ ] **P0.3** Add/confirm `convex.json` with component-friendly codegen settings.
+- [x] **P0.1** Freeze package target to `@better-sslcommerz/convex` and component name `sslcommerz`.
+- [x] **P0.2** Mark current backend-style files as migration targets (`packages/convex/convex/*` -> `packages/convex/src/component/*`).
+- [x] **P0.3** Add/confirm `convex.json` with component-friendly codegen settings.
 
 Reference standard:
 
@@ -301,10 +301,10 @@ Reference standard:
 
 ## Phase 1 - package scaffolding and config parity
 
-- [ ] **P1.1** Create `src/` tree (`component`, `client`, `react`, root index/test).
-- [ ] **P1.2** Update `package.json` to component export map (including `./convex.config` and `./convex.config.js`).
-- [ ] **P1.3** Add `tsconfig.json`, `tsconfig.build.json`, `tsconfig.test.json` aligned with Stripe/Polar pattern.
-- [ ] **P1.4** Add `vitest.config.ts` and extend lint rules/ignores for generated files.
+- [x] **P1.1** Create `src/` tree (`component`, `client`, `react`, root index/test).
+- [x] **P1.2** Update `package.json` to component export map (including `./convex.config` and `./convex.config.js`).
+- [x] **P1.3** Add `tsconfig.json`, `tsconfig.build.json`, `tsconfig.test.json` aligned with Stripe/Polar pattern.
+- [x] **P1.4** Add `vitest.config.ts` and extend lint rules/ignores for generated files.
 
 Reference standard:
 
@@ -317,9 +317,9 @@ Reference standard:
 
 ## Phase 2 - component declaration and schema
 
-- [ ] **P2.1** Implement `src/component/convex.config.ts` with `defineComponent("sslcommerz")`.
-- [ ] **P2.2** Replace demo schema with v1 tables (`paymentSessions`, `transactions`, `refunds`, `invoices`, `ipnEvents`).
-- [ ] **P2.3** Add all planned indexes and ensure query patterns are index-backed.
+- [x] **P2.1** Implement `src/component/convex.config.ts` with `defineComponent("sslcommerz")`.
+- [x] **P2.2** Replace demo schema with v1 tables (`paymentSessions`, `transactions`, `refunds`, `invoices`, `ipnEvents`).
+- [x] **P2.3** Add all planned indexes and ensure query patterns are index-backed.
 
 Reference standard:
 
@@ -329,9 +329,9 @@ Reference standard:
 
 ## Phase 3 - public component API
 
-- [ ] **P3.1** Build public query API in `src/component/public.ts` (get/list session, transaction, invoice, refund, ipn).
-- [ ] **P3.2** Build public mutations for controlled writes and status transitions.
-- [ ] **P3.3** Return validator-safe objects without system fields.
+- [x] **P3.1** Build public query API in `src/component/public.ts` (get/list session, transaction, invoice, refund, ipn).
+- [x] **P3.2** Build public mutations for controlled writes and status transitions.
+- [x] **P3.3** Return validator-safe objects without system fields.
 
 Reference standard:
 
@@ -339,9 +339,9 @@ Reference standard:
 
 ## Phase 4 - internal component API (idempotent handlers)
 
-- [ ] **P4.1** Build `src/component/internal.ts` for IPN recording and status sync.
-- [ ] **P4.2** Implement idempotency guard by `valId`.
-- [ ] **P4.3** Add stale update guards where needed (timestamp/status precedence).
+- [x] **P4.1** Build `src/component/internal.ts` for IPN recording and status sync.
+- [x] **P4.2** Implement idempotency guard by `valId`.
+- [x] **P4.3** Add stale update guards where needed (timestamp/status precedence).
 
 Reference standard:
 
@@ -350,9 +350,9 @@ Reference standard:
 
 ## Phase 5 - generate component API contract
 
-- [ ] **P5.1** Run `convex codegen --component-dir ./src/component`.
-- [ ] **P5.2** Commit generated `src/component/_generated/*`.
-- [ ] **P5.3** Validate imports in component files use `./_generated/server.js`.
+- [x] **P5.1** Run `convex codegen --component-dir ./src/component`.
+- [x] **P5.2** Commit generated `src/component/_generated/*`.
+- [x] **P5.3** Validate imports in component files use `./_generated/server.js`.
 
 Reference standard:
 
@@ -361,10 +361,10 @@ Reference standard:
 
 ## Phase 6 - client wrapper using `better-sslcommerz`
 
-- [ ] **P6.1** Define wrapper and route config types in `src/client/types.ts`.
-- [ ] **P6.2** Implement `SslCommerzConvex` class in `src/client/index.ts`.
-- [ ] **P6.3** Integrate `createSslcommerzClient` for all outbound SSLCommerz API calls.
-- [ ] **P6.4** Add read/write bridges using `ctx.runQuery` and `ctx.runMutation` to component API.
+- [x] **P6.1** Define wrapper and route config types in `src/client/types.ts`.
+- [x] **P6.2** Implement `SslCommerzConvex` class in `src/client/index.ts`.
+- [x] **P6.3** Integrate `createSslcommerzClient` for all outbound SSLCommerz API calls.
+- [x] **P6.4** Add read/write bridges using `ctx.runQuery` and `ctx.runMutation` to component API.
 
 Reference standard:
 
@@ -376,10 +376,10 @@ Reference standard:
 
 ## Phase 7 - HTTP route registration
 
-- [ ] **P7.1** Implement `registerRoutes(http, component, config)` helper export.
-- [ ] **P7.2** Add IPN handler path with parsing, validation, idempotent recording, and verification.
-- [ ] **P7.3** Add success/fail/cancel handlers and optional callbacks.
-- [ ] **P7.4** Ensure route handlers return stable HTTP responses and do not leak secrets.
+- [x] **P7.1** Implement `registerRoutes(http, component, config)` helper export.
+- [x] **P7.2** Add IPN handler path with parsing, validation, idempotent recording, and verification.
+- [x] **P7.3** Add success/fail/cancel handlers and optional callbacks.
+- [x] **P7.4** Ensure route handlers return stable HTTP responses and do not leak secrets.
 
 Reference standard:
 
@@ -388,10 +388,10 @@ Reference standard:
 
 ## Phase 8 - package entrypoints and helper surfaces
 
-- [ ] **P8.1** Add `src/index.ts` export barrel.
-- [ ] **P8.2** Add `src/react/index.ts` stub.
-- [ ] **P8.3** Add `src/test.ts` register helper for `convex-test`.
-- [ ] **P8.4** Verify package exports resolve all entrypoints.
+- [x] **P8.1** Add `src/index.ts` export barrel.
+- [x] **P8.2** Add `src/react/index.ts` stub.
+- [x] **P8.3** Add `src/test.ts` register helper for `convex-test`.
+- [x] **P8.4** Verify package exports resolve all entrypoints.
 
 Reference standard:
 
@@ -400,10 +400,10 @@ Reference standard:
 
 ## Phase 9 - tests and quality gates
 
-- [ ] **P9.1** Add component tests (`setup.test.ts`, `public.test.ts`).
-- [ ] **P9.2** Add client tests (`setup.test.ts`, `index.test.ts`).
-- [ ] **P9.3** Add route tests for IPN/success/fail/cancel parsing and callback behavior.
-- [ ] **P9.4** Pass `lint`, `typecheck`, `test`, and `build:codegen`.
+- [x] **P9.1** Add component tests (`setup.test.ts`, `public.test.ts`).
+- [x] **P9.2** Add client tests (`setup.test.ts`, `index.test.ts`).
+- [x] **P9.3** Add route tests for IPN/success/fail/cancel parsing and callback behavior.
+- [x] **P9.4** Pass `lint`, `typecheck`, `test`, and `build:codegen`.
 
 Reference standard:
 
@@ -415,10 +415,10 @@ Reference standard:
 
 ## Phase 10 - monorepo and release hardening
 
-- [ ] **P10.1** Confirm `pnpm-workspace.yaml`/catalog entries remain correct for component deps.
-- [ ] **P10.2** Confirm `turbo.json` env and task behavior for component build/test flow.
-- [ ] **P10.3** Pack and smoke-test package exports (`pnpm pack` + install test).
-- [ ] **P10.4** Prepare release checklist for publish mode (remove `private` when ready).
+- [x] **P10.1** Confirm `pnpm-workspace.yaml`/catalog entries remain correct for component deps.
+- [x] **P10.2** Confirm `turbo.json` env and task behavior for component build/test flow.
+- [x] **P10.3** Pack and smoke-test package exports (`npm pack --ignore-scripts` succeeds; tarball install validated up to external unpublished dependency constraints).
+- [x] **P10.4** Prepare release checklist for publish mode (remove `private` when ready).
 
 ---
 
