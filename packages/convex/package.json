@@ -32,6 +32,15 @@
     }
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GearHead87/better-sslcommerz",
+    "directory": "packages/convex"
+  },
+  "bugs": {
+    "url": "https://github.com/GearHead87/better-sslcommerz/issues"
+  },
+  "homepage": "https://github.com/GearHead87/better-sslcommerz#readme",
   "publishConfig": {
     "access": "public"
   },

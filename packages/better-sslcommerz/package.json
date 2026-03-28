@@ -23,6 +23,15 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GearHead87/better-sslcommerz",
+    "directory": "packages/better-sslcommerz"
+  },
+  "bugs": {
+    "url": "https://github.com/GearHead87/better-sslcommerz/issues"
+  },
+  "homepage": "https://github.com/GearHead87/better-sslcommerz#readme",
   "publishConfig": {
     "access": "public"
   },
