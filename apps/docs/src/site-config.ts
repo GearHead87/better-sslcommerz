@@ -41,6 +41,19 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    title: "Convex Component",
+    links: [
+      { href: "/convex", title: "Overview" },
+      { href: "/convex/installation", title: "Installation" },
+      { href: "/convex/quick-start", title: "Quick Start" },
+      { href: "/convex/http-routes", title: "HTTP Routes" },
+      { href: "/convex/reading-data", title: "Reading Data" },
+      { href: "/convex/database-schema", title: "Database Schema" },
+      { href: "/convex/api-reference", title: "API Reference" },
+      { href: "/convex/testing", title: "Testing" },
+    ],
+  },
+  {
     title: "Articles",
     links: [{ href: "/blog", title: "Blog" }],
   },

@@ -1,0 +1,175 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "HTTP Routes",
+  category: "Convex Component",
+  description:
+    "The four HTTP routes registered by registerRoutes() — IPN webhook, success, fail, and cancel — with the full lifecycle of each route, customisable paths, redirect URLs, and lifecycle callbacks.",
+});
+
+# HTTP Routes
+
+`registerRoutes` mounts four HTTP POST routes on your Convex HTTP router that handle SSLCommerz gateway callbacks. Call it once in `convex/http.ts`.
+
+```ts
+// convex/http.ts
+import { httpRouter } from "convex/server";
+import { sslcommerz } from "./lib/sslcommerz";
+
+const http = httpRouter();
+sslcommerz.registerRoutes(http);
+export default http;
+```
+
+## Default routes
+
+| Path | Method | Trigger |
+| ---- | ------ | ------- |
+| `/sslcommerz/ipn` | POST | SSLCommerz IPN webhook — fires server-to-server after every payment attempt |
+| `/sslcommerz/success` | POST | Customer browser redirect after a successful payment |
+| `/sslcommerz/fail` | POST | Customer browser redirect after a failed payment |
+| `/sslcommerz/cancel` | POST | Customer browser redirect after the customer cancels |
+
+Your Convex deployment exposes these at `https://<your-deployment>.convex.site`. Provide the full IPN URL in the `ipn_url` field of `createPaymentSession` and in your SSLCommerz store settings.
+
+## IPN route lifecycle
+
+The IPN route fires server-to-server from SSLCommerz, independent of the customer's browser. The following happens automatically for every IPN POST:
+
+1. Parses and validates the IPN payload with `parseIpnPayload()`. Returns HTTP 400 if the payload is malformed.
+2. Writes the raw event to the `ipnEvents` table with `verified: false`.
+3. Calls `validateOrder` with the `val_id` from the payload to confirm the payment against SSLCommerz.
+4. On successful validation, marks the IPN event as `verified: true` and syncs the `paymentSessions` record status.
+5. Runs the `onIpn` callback if one is provided, passing the verified IPN payload and the stored session.
+6. Returns `{ received: true }` with HTTP 200.
+
+<Warning>
+  The IPN route calls `validateOrder` internally before invoking `onIpn`. You
+  do not need to validate again inside the callback — the data passed to it has
+  already been confirmed with SSLCommerz.
+</Warning>
+
+## Success route lifecycle
+
+1. Reads `tran_id` and `val_id` from the POST form body.
+2. Sets the `paymentSessions` record status to `"success"`.
+3. Calls `validateOrder` with `val_id` to confirm the payment.
+4. Runs the `onSuccess` callback if provided.
+5. Redirects the browser to `successRedirectUrl` (defaults to `"/"`).
+
+## Fail and cancel route lifecycle
+
+The fail and cancel routes follow the same pattern without the validation step:
+
+1. Reads `tran_id` from the POST form body.
+2. Sets the `paymentSessions` status to `"failed"` or `"cancelled"`.
+3. Runs `onFail` / `onCancel` callback if provided.
+4. Redirects to `failRedirectUrl` / `cancelRedirectUrl` (both default to `"/"`).
+
+## Customising paths and redirect URLs
+
+Pass a `RegisterRoutesConfig` object as the second argument to `registerRoutes`:
+
+```ts
+sslcommerz.registerRoutes(http, {
+  // Override route paths
+  ipnPath: "/payments/ipn",
+  successPath: "/payments/success",
+  failPath: "/payments/fail",
+  cancelPath: "/payments/cancel",
+
+  // Where to redirect the customer's browser
+  successRedirectUrl: "/dashboard/orders",
+  failRedirectUrl: "/checkout?error=payment_failed",
+  cancelRedirectUrl: "/checkout",
+});
+```
+
+<Note>
+  When you change the default paths, update the `ipn_url`, `success_url`,
+  `fail_url`, and `cancel_url` fields you pass to `createPaymentSession`, and
+  update the IPN URL in your SSLCommerz store settings.
+</Note>
+
+## Callbacks
+
+All four callbacks are optional. They run after the route has persisted the event and, where applicable, completed validation. Use them for business logic — updating orders, sending notifications, or triggering fulfilment.
+
+Each callback receives `ctx` (a Convex context with `runQuery` and `runMutation`) and entity-specific arguments.
+
+### `onIpn(ctx, ipn, session)`
+
+Runs after the IPN event has been recorded and verified. `ipn` is the validated IPN payload; `session` is the stored `paymentSessions` record (or `null` if no session was found for that `tran_id`).
+
+```ts
+sslcommerz.registerRoutes(http, {
+  onIpn: async (ctx, ipn, session) => {
+    if (ipn.status !== "VALID") return;
+
+    await ctx.runMutation(api.orders.confirmPayment, {
+      tranId: ipn.tran_id,
+      valId: ipn.val_id,
+      bankTranId: ipn.bank_tran_id,
+    });
+  },
+});
+```
+
+### `onSuccess(ctx, session)`
+
+Runs after the success redirect has set the session status and called `validateOrder`. `session` is the stored `paymentSessions` record (or `null`).
+
+```ts
+sslcommerz.registerRoutes(http, {
+  onSuccess: async (ctx, session) => {
+    if (!session) return;
+    await ctx.runMutation(api.orders.markAsPaid, { tranId: session.tranId });
+  },
+});
+```
+
+### `onFail(ctx, session)`
+
+```ts
+sslcommerz.registerRoutes(http, {
+  onFail: async (ctx, session) => {
+    if (!session) return;
+    await ctx.runMutation(api.orders.markAsFailed, { tranId: session.tranId });
+  },
+});
+```
+
+### `onCancel(ctx, session)`
+
+```ts
+sslcommerz.registerRoutes(http, {
+  onCancel: async (ctx, session) => {
+    if (!session) return;
+    await ctx.runMutation(api.orders.markAsCancelled, { tranId: session.tranId });
+  },
+});
+```
+
+## IPN vs success redirect
+
+Both the IPN route and the success redirect call `validateOrder`. In production both will fire for successful payments. Your business logic should be idempotent — guard against double-fulfilment by checking whether an order has already been marked as paid before acting on either callback.
+
+The IPN route is more reliable because it fires server-to-server without depending on the customer's browser completing the redirect. Prefer `onIpn` for fulfilment-critical actions and treat `onSuccess` as a UI convenience.
+
+## Standalone `registerRoutes` export
+
+If you prefer not to use the `SslCommerzConvex` class, the standalone `registerRoutes` function accepts the component reference directly:
+
+```ts
+import { registerRoutes } from "@better-sslcommerz/convex";
+import { components } from "./_generated/api";
+
+registerRoutes(
+  http,
+  components.sslcommerz,
+  routesConfig,    // RegisterRoutesConfig — optional
+  componentConfig, // SslCommerzComponentConfig — optional
+);
+```
+
+This is equivalent to `new SslCommerzConvex(component, componentConfig).registerRoutes(http, routesConfig)`.

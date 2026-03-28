@@ -1,0 +1,184 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Testing",
+  category: "Convex Component",
+  description:
+    "Unit test code that uses @better-sslcommerz/convex with convex-test. The ./test export registers the component's schema and modules into an in-memory test environment.",
+});
+
+# Testing
+
+`@better-sslcommerz/convex` ships a `./test` export that registers the component's schema and function modules into a [`convex-test`](https://github.com/get-convex/convex-test) in-memory environment. This lets you unit test Convex functions that use the component without a running Convex deployment.
+
+## Install `convex-test`
+
+```bash
+npm install -D convex-test
+# or
+pnpm add -D convex-test
+```
+
+## Register the component
+
+Import the `register` helper from `@better-sslcommerz/convex/test` and call it with your `TestConvex` instance:
+
+```ts
+// convex/payments.test.ts
+import { convexTest } from "convex-test";
+import { expect, test } from "vitest";
+import { register } from "@better-sslcommerz/convex/test";
+import { SslCommerzConvex } from "@better-sslcommerz/convex";
+import schema from "./schema"; // your app's schema
+
+test("createPaymentSession persists a session record", async () => {
+  const t = convexTest(schema);
+  register(t); // registers the sslcommerz component
+
+  // ...
+});
+```
+
+<Note>
+  Import `./test` as `@better-sslcommerz/convex/test` — it is a separate
+  entry point that is not included in the main bundle. It references Vite's
+  `import.meta.glob` internally and must only be imported in test files.
+</Note>
+
+## Example: testing `createPaymentSession`
+
+The following example uses `vi.mock` to stub the SSLCommerz HTTP call so the test does not hit the real gateway:
+
+```ts
+// convex/payments.test.ts
+import { convexTest } from "convex-test";
+import { expect, test, vi, beforeEach } from "vitest";
+import { register } from "@better-sslcommerz/convex/test";
+import { SslCommerzConvex } from "@better-sslcommerz/convex";
+import schema from "./schema";
+
+// Stub the base SDK so tests don't call the real gateway
+vi.mock("better-sslcommerz", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-sslcommerz")>();
+  return {
+    ...actual,
+    createSslcommerzClient: () => ({
+      core: {
+        createSession: vi.fn().mockResolvedValue({
+          status: "SUCCESS",
+          sessionkey: "test-session-key",
+          GatewayPageURL: "https://sandbox.sslcommerz.com/gwprocess/v4/pay.php?token=test",
+        }),
+        validateOrder: vi.fn().mockResolvedValue({
+          status: "VALID",
+          tran_id: "TXN_001",
+          val_id: "val_001",
+          amount: "500",
+          currency: "BDT",
+          store_amount: "490",
+          card_type: "VISA",
+        }),
+      },
+      invoice: {},
+    }),
+  };
+});
+
+test("createPaymentSession stores a pending session record", async () => {
+  const t = convexTest(schema);
+  register(t);
+
+  await t.action(async (ctx) => {
+    const sslcommerz = new SslCommerzConvex(
+      // @ts-expect-error – test component handle
+      t.components.sslcommerz,
+      {
+        storeId: "test_store",
+        storePasswd: "test_password",
+        environment: "sandbox",
+      },
+    );
+
+    const result = await sslcommerz.createPaymentSession(ctx, {
+      tranId: "TXN_001",
+      totalAmount: 500,
+      currency: "BDT",
+      successUrl: "https://test.com/success",
+      failUrl: "https://test.com/fail",
+      cancelUrl: "https://test.com/cancel",
+      customerInfo: {
+        name: "Test User",
+        email: "test@example.com",
+        phone: "01700000000",
+        address1: "123 Test St",
+        city: "Dhaka",
+        postcode: "1207",
+        country: "Bangladesh",
+      },
+      productInfo: {
+        name: "Test Product",
+        category: "general",
+        profile: "general",
+      },
+    });
+
+    expect(result.tranId).toBe("TXN_001");
+    expect(result.sessionKey).toBe("test-session-key");
+    expect(result.gatewayUrl).toContain("sandbox.sslcommerz.com");
+  });
+
+  // Verify the record was written to the component's table
+  await t.query(async (ctx) => {
+    const sslcommerz = new SslCommerzConvex(
+      // @ts-expect-error – test component handle
+      t.components.sslcommerz,
+      { storeId: "test", storePasswd: "test" },
+    );
+
+    const session = await sslcommerz.getPaymentSession(ctx, {
+      tranId: "TXN_001",
+    });
+
+    expect(session).not.toBeNull();
+    expect(session!.status).toBe("pending");
+    expect(session!.sessionKey).toBe("test-session-key");
+    expect(session!.currency).toBe("BDT");
+  });
+});
+```
+
+## What `register` does
+
+```ts
+import { register } from "@better-sslcommerz/convex/test";
+
+register(t, name?);
+```
+
+<Properties>
+  <Property name="t" type="TestConvex" required>
+    The `convex-test` instance returned by `convexTest(schema)`.
+  </Property>
+  <Property name="name" type="string" optional defaultValue='"sslcommerz"'>
+    The component name to register under. Must match the name used in `convex.config.ts` when `app.use(sslcommerz)` was called. Override only if you mounted the component under a custom name.
+  </Property>
+</Properties>
+
+Internally, `register` calls `t.registerComponent(name, schema, modules)` with the component's Convex schema and all its function modules resolved via `import.meta.glob`.
+
+## Vitest configuration
+
+Ensure your Vitest config enables Vite's glob resolution for the component modules. A minimal setup:
+
+```ts
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    environment: "node",
+  },
+});
+```
+
+The `convex-test` package handles the in-memory Convex runtime. No additional configuration is required beyond what `convex-test` already needs.

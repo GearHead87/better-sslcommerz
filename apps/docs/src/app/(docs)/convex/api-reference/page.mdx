@@ -1,0 +1,382 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "API Reference",
+  category: "Convex Component",
+  description:
+    "Full reference for the SslCommerzConvex class — constructor, SslCommerzComponentConfig, all action methods, query helpers, registerRoutes, and the standalone registerRoutes export.",
+});
+
+# API Reference
+
+## `SslCommerzConvex` class
+
+The primary interface for the component. Instantiate it once and import it across your Convex functions.
+
+```ts
+import { SslCommerzConvex } from "@better-sslcommerz/convex";
+import { components } from "./_generated/api";
+
+const sslcommerz = new SslCommerzConvex(components.sslcommerz);
+```
+
+### Constructor
+
+```ts
+new SslCommerzConvex(component: ComponentApi, config?: SslCommerzComponentConfig)
+```
+
+<Properties>
+  <Property name="component" type="ComponentApi" required>
+    The generated component reference from `components.sslcommerz`. This is the typed handle Convex generates after you register the component and run codegen.
+  </Property>
+  <Property name="config" type="SslCommerzComponentConfig" optional>
+    Optional credential and environment configuration. When omitted, all values fall back to environment variables. See `SslCommerzComponentConfig` below.
+  </Property>
+</Properties>
+
+---
+
+## `SslCommerzComponentConfig`
+
+```ts
+interface SslCommerzComponentConfig {
+  storeId?: string;
+  storePasswd?: string;
+  environment?: "sandbox" | "live";
+  validateResponse?: boolean;
+}
+```
+
+<Properties>
+  <Property name="storeId" type="string" optional>
+    Your SSLCommerz store ID. Falls back to the `SSLCOMMERZ_STORE_ID` environment variable. Throws at call time if neither is set.
+  </Property>
+  <Property name="storePasswd" type="string" optional>
+    Your SSLCommerz store password. Falls back to `SSLCOMMERZ_STORE_PASSWD`. Throws at call time if neither is set.
+  </Property>
+  <Property name="environment" type='"sandbox" | "live"' optional defaultValue='"sandbox"'>
+    The SSLCommerz environment to target. Falls back to `SSLCOMMERZ_ENVIRONMENT`. Defaults to `"sandbox"` if neither is set.
+  </Property>
+  <Property name="validateResponse" type="boolean" optional defaultValue="false">
+    When `true`, every API response is validated against its Zod schema before being returned. Corresponds to the same option on the base `createSslcommerzClient`. See [Configuration](/configuration).
+  </Property>
+</Properties>
+
+---
+
+## Action methods
+
+These methods call the SSLCommerz gateway and automatically persist the result. They require a `RunActionCtx` (any Convex action context satisfies this).
+
+### `createPaymentSession`
+
+```ts
+createPaymentSession(ctx: RunActionCtx, args: CreatePaymentSessionArgs): Promise<CreatePaymentSessionResult>
+```
+
+Calls `client.core.createSession()`, validates the response, and writes a `paymentSessions` record. Throws if the gateway returns a non-SUCCESS status or if `sessionkey` / `GatewayPageURL` are missing from the response.
+
+<Properties>
+  <Property name="args.tranId" type="string" required>
+    Your unique transaction ID (max 30 characters). Must be unique per payment attempt.
+  </Property>
+  <Property name="args.totalAmount" type="number | string" required>
+    The payment amount.
+  </Property>
+  <Property name="args.currency" type="string" required>
+    3-letter ISO currency code (e.g. `"BDT"`).
+  </Property>
+  <Property name="args.successUrl" type="string" required>
+    URL for the customer to be redirected to after a successful payment.
+  </Property>
+  <Property name="args.failUrl" type="string" required>
+    URL for the customer to be redirected to after a failed payment.
+  </Property>
+  <Property name="args.cancelUrl" type="string" required>
+    URL for the customer to be redirected to after cancellation.
+  </Property>
+  <Property name="args.ipnUrl" type="string" optional>
+    URL for SSLCommerz to POST the IPN webhook to. Strongly recommended — use your Convex deployment's `/sslcommerz/ipn` URL.
+  </Property>
+  <Property name="args.customerInfo" type="CustomerInfo" required>
+    Customer name, email, phone, address, city, postcode, and country. See `CustomerInfo` below.
+  </Property>
+  <Property name="args.productInfo" type="ProductInfo" required>
+    Product name, category, and profile. See `ProductInfo` below.
+  </Property>
+  <Property name="args.shippingInfo" type="ShippingInfo" optional>
+    Shipping method and optional address fields. Defaults to `{ method: "NO" }` if omitted.
+  </Property>
+  <Property name="args.userId" type="string" optional>
+    An optional user ID to store on the session record for later filtering.
+  </Property>
+  <Property name="args.orgId" type="string" optional>
+    An optional organisation ID to store on the session record.
+  </Property>
+  <Property name="args.metadata" type="Record<string, unknown>" optional>
+    Arbitrary metadata to store on the session record.
+  </Property>
+  <Property name="args.valueA" type="string" optional>
+    Custom passthrough field, returned unchanged in IPN and validation responses (`value_a`).
+  </Property>
+  <Property name="args.valueB" type="string" optional>
+    Custom passthrough field (`value_b`).
+  </Property>
+  <Property name="args.valueC" type="string" optional>
+    Custom passthrough field (`value_c`).
+  </Property>
+  <Property name="args.valueD" type="string" optional>
+    Custom passthrough field (`value_d`).
+  </Property>
+</Properties>
+
+**Returns `CreatePaymentSessionResult`:**
+
+<Properties>
+  <Property name="tranId" type="string">
+    Your transaction ID, echoed back.
+  </Property>
+  <Property name="sessionKey" type="string">
+    The `sessionkey` from SSLCommerz.
+  </Property>
+  <Property name="gatewayUrl" type="string">
+    The `GatewayPageURL` — redirect the customer here.
+  </Property>
+</Properties>
+
+---
+
+### `validateOrder`
+
+```ts
+validateOrder(ctx: RunActionCtx, args: { val_id: string }): Promise<OrderValidationResponse>
+```
+
+Calls `client.core.validateOrder()`, upserts a `transactions` record, and syncs the `paymentSessions` status. Returns the full validation response. See [Validate Order](/core/validate-order) for the complete response field reference.
+
+---
+
+### `refundInitiate`
+
+```ts
+refundInitiate(ctx: RunActionCtx, args: RefundInitiateInput): Promise<RefundInitiateResponse>
+```
+
+Calls `client.core.refundInitiate()` and upserts a `refunds` record if `refund_ref_id` is present in the response. See [Refunds](/core/refund) for the full input and response reference.
+
+---
+
+### `refundStatus`
+
+```ts
+refundStatus(ctx: RunActionCtx, args: RefundStatusInput): Promise<RefundStatusResponse>
+```
+
+Calls `client.core.refundStatus()` and updates the `refunds` record. See [Refunds](/core/refund).
+
+---
+
+### `transactionQueryBySession`
+
+```ts
+transactionQueryBySession(ctx: RunActionCtx, args: TransactionQueryBySessionInput): Promise<TransactionQueryBySessionResponse>
+```
+
+Calls `client.core.transactionQueryBySession()`, upserts a `transactions` record, and syncs the session status. See [Transaction Query](/core/transaction-query).
+
+---
+
+### `transactionQueryByTranId`
+
+```ts
+transactionQueryByTranId(ctx: RunActionCtx, args: TransactionQueryByTranIdInput): Promise<TransactionQueryByTranIdResponse>
+```
+
+Calls `client.core.transactionQueryByTranId()`. Loops over every item in the `element` array and upserts a `transactions` record for each. See [Transaction Query](/core/transaction-query).
+
+---
+
+### `createInvoice`
+
+```ts
+createInvoice(ctx: RunActionCtx, args: CreateInvoiceInput): Promise<CreateInvoiceResponse>
+```
+
+Calls `client.invoice.createInvoice()` and upserts an `invoices` record. See [Create Invoice](/invoice/create-invoice).
+
+---
+
+### `invoiceStatus`
+
+```ts
+invoiceStatus(ctx: RunActionCtx, args: InvoiceStatusInput): Promise<InvoiceStatusResponse>
+```
+
+Calls `client.invoice.invoiceStatus()` and updates the `invoices` record. See [Invoice Status](/invoice/invoice-status).
+
+---
+
+### `invoiceCancel`
+
+```ts
+invoiceCancel(ctx: RunActionCtx, args: InvoiceCancelInput): Promise<InvoiceCancelResponse>
+```
+
+Calls `client.invoice.invoiceCancel()` and updates the `invoices` record. See [Cancel Invoice](/invoice/invoice-cancel).
+
+---
+
+## Query helpers
+
+These methods proxy to `ctx.runQuery` against the component's public queries. They work from any Convex context.
+
+| Method | Args | Returns |
+| ------ | ---- | ------- |
+| `getPaymentSession(ctx, { tranId })` | `tranId: string` | Session record or `null` |
+| `listPaymentSessionsByStatus(ctx, { status })` | `status: "pending" \| "success" \| "failed" \| "cancelled" \| "expired"` | Session array |
+| `listPaymentSessionsByUserId(ctx, { userId })` | `userId: string` | Session array |
+| `listPaymentSessionsByOrgId(ctx, { orgId })` | `orgId: string` | Session array |
+| `getTransactionByTranId(ctx, { tranId })` | `tranId: string` | Transaction record or `null` |
+| `getRefundByRefId(ctx, { refundRefId })` | `refundRefId: string` | Refund record or `null` |
+| `getInvoiceById(ctx, { invoiceId })` | `invoiceId: string` | Invoice record or `null` |
+| `listIpnEventsByTranId(ctx, { tranId })` | `tranId: string` | IPN event array |
+
+---
+
+## `registerRoutes`
+
+```ts
+registerRoutes(http: HttpRouter, config?: RegisterRoutesConfig): void
+```
+
+Registers four HTTP POST routes on `http`. See [HTTP Routes](/convex/http-routes) for the full route lifecycle.
+
+---
+
+## `parseIpnPayload`
+
+```ts
+parseIpnPayload(payload: unknown): IpnPayload
+```
+
+Validates and parses an unknown IPN POST body against the `ipnPayloadSchema` Zod schema. Always validates — there is no `validateResponse` toggle. Throws `SslcommerzValidationError` on failure. See [IPN Webhooks](/core/ipn) for the full payload field reference.
+
+---
+
+## `RegisterRoutesConfig`
+
+```ts
+interface RegisterRoutesConfig {
+  ipnPath?: string;          // default: "/sslcommerz/ipn"
+  successPath?: string;      // default: "/sslcommerz/success"
+  failPath?: string;         // default: "/sslcommerz/fail"
+  cancelPath?: string;       // default: "/sslcommerz/cancel"
+  successRedirectUrl?: string; // default: "/"
+  failRedirectUrl?: string;    // default: "/"
+  cancelRedirectUrl?: string;  // default: "/"
+  onIpn?: (ctx: RunMutationCtx, ipn: IpnPayload, session: unknown) => Promise<void>;
+  onSuccess?: (ctx: RunMutationCtx, session: unknown) => Promise<void>;
+  onFail?: (ctx: RunMutationCtx, session: unknown) => Promise<void>;
+  onCancel?: (ctx: RunMutationCtx, session: unknown) => Promise<void>;
+}
+```
+
+---
+
+## `CustomerInfo`
+
+```ts
+interface CustomerInfo {
+  name: string;
+  email: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state?: string;
+  postcode: string;
+  country: string;
+  phone: string;
+  fax?: string;
+}
+```
+
+---
+
+## `ProductInfo`
+
+```ts
+interface ProductInfo {
+  name: string;
+  category: string;
+  profile:
+    | "general"
+    | "physical-goods"
+    | "non-physical-goods"
+    | "telecom-vertical"
+    | "travel-vertical"
+    | "airline-tickets";
+}
+```
+
+---
+
+## `ShippingInfo`
+
+```ts
+interface ShippingInfo {
+  method: "YES" | "NO" | "Courier" | "SSLCOMMERZ_LOGISTIC";
+  name?: string;
+  address1?: string;
+  address2?: string;
+  area?: string;
+  city?: string;
+  subCity?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+}
+```
+
+---
+
+## Context interfaces
+
+The component uses minimal context interfaces so any standard Convex context satisfies them:
+
+```ts
+interface RunQueryCtx {
+  runQuery: GenericQueryCtx["runQuery"];
+}
+
+interface RunMutationCtx {
+  runQuery: GenericQueryCtx["runQuery"];
+  runMutation: GenericMutationCtx["runMutation"];
+}
+
+interface RunActionCtx {
+  runQuery: GenericQueryCtx["runQuery"];
+  runMutation: GenericMutationCtx["runMutation"];
+  runAction: GenericActionCtx["runAction"];
+}
+```
+
+---
+
+## Standalone `registerRoutes`
+
+An alternative to the class when you prefer a functional style:
+
+```ts
+import { registerRoutes } from "@better-sslcommerz/convex";
+import { components } from "./_generated/api";
+
+registerRoutes(
+  http,
+  components.sslcommerz,
+  routesConfig,    // RegisterRoutesConfig — optional
+  componentConfig, // SslCommerzComponentConfig — optional
+);
+```
+
+Returns the `SslCommerzConvex` instance it created internally.

@@ -1,0 +1,183 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Reading Data",
+  category: "Convex Component",
+  description:
+    "Query stored SSLCommerz payment data — sessions, transactions, refunds, invoices, and IPN events — from any Convex query, mutation, or action using the built-in helper methods.",
+});
+
+# Reading Data
+
+`SslCommerzConvex` exposes query helpers for every entity the component persists. All helpers accept a Convex context as the first argument and return typed results. They delegate to `ctx.runQuery` internally, so they work from Convex queries, mutations, and actions.
+
+## Payment sessions
+
+A session record is created by `createPaymentSession` and its `status` is updated as the payment progresses through the gateway lifecycle.
+
+### `getPaymentSession`
+
+Look up a session by your transaction ID. Returns `null` if no record exists.
+
+```ts
+const session = await sslcommerz.getPaymentSession(ctx, {
+  tranId: "TXN_123456",
+});
+```
+
+### `listPaymentSessionsByStatus`
+
+Filter sessions by their current lifecycle status.
+
+```ts
+const pending = await sslcommerz.listPaymentSessionsByStatus(ctx, {
+  status: "pending",
+});
+```
+
+<Properties>
+  <Property name="status" type='"pending" | "success" | "failed" | "cancelled" | "expired"' required>
+    The session lifecycle status to filter by.
+  </Property>
+</Properties>
+
+### `listPaymentSessionsByUserId`
+
+Retrieve all sessions associated with a specific user. The `userId` is the value you passed in `createPaymentSession`.
+
+```ts
+const sessions = await sslcommerz.listPaymentSessionsByUserId(ctx, {
+  userId: "user_abc",
+});
+```
+
+### `listPaymentSessionsByOrgId`
+
+Retrieve all sessions associated with a specific organisation.
+
+```ts
+const sessions = await sslcommerz.listPaymentSessionsByOrgId(ctx, {
+  orgId: "org_xyz",
+});
+```
+
+## Transactions
+
+A transaction record is created or updated each time `validateOrder` is called. It contains the full verified payment detail returned by SSLCommerz.
+
+### `getTransactionByTranId`
+
+```ts
+const tx = await sslcommerz.getTransactionByTranId(ctx, {
+  tranId: "TXN_123456",
+});
+```
+
+## Refunds
+
+A refund record is created when `refundInitiate` is called and updated when `refundStatus` is polled.
+
+### `getRefundByRefId`
+
+Look up a refund by the `refund_ref_id` returned from `refundInitiate`.
+
+```ts
+const refund = await sslcommerz.getRefundByRefId(ctx, {
+  refundRefId: "refund_ref_abc",
+});
+```
+
+## Invoices
+
+An invoice record is created when `createInvoice` is called and updated on subsequent status checks or cancellations.
+
+### `getInvoiceById`
+
+```ts
+const invoice = await sslcommerz.getInvoiceById(ctx, {
+  invoiceId: "invoice_abc",
+});
+```
+
+## IPN events
+
+An IPN event record is written for each IPN POST received. The `verified` flag is `false` when first recorded and set to `true` after `validateOrder` succeeds inside the IPN route handler.
+
+### `listIpnEventsByTranId`
+
+Retrieve all IPN events received for a given transaction ID. A transaction may receive more than one IPN in some cases.
+
+```ts
+const events = await sslcommerz.listIpnEventsByTranId(ctx, {
+  tranId: "TXN_123456",
+});
+```
+
+## Using helpers from your own Convex functions
+
+All helpers work from queries, mutations, and actions. Any standard Convex context satisfies the minimal `RunQueryCtx` interface the helpers require:
+
+```ts
+// convex/orders.ts
+import { query, action, v } from "convex/server";
+import { sslcommerz } from "./lib/sslcommerz";
+
+export const getOrderPayment = query({
+  args: { tranId: v.string() },
+  handler: async (ctx, args) => {
+    const session = await sslcommerz.getPaymentSession(ctx, {
+      tranId: args.tranId,
+    });
+    const transaction = await sslcommerz.getTransactionByTranId(ctx, {
+      tranId: args.tranId,
+    });
+
+    return { session, transaction };
+  },
+});
+
+export const getOrderRefund = action({
+  args: { refundRefId: v.string() },
+  handler: async (ctx, args) => {
+    return sslcommerz.getRefundByRefId(ctx, {
+      refundRefId: args.refundRefId,
+    });
+  },
+});
+```
+
+## Additional component queries
+
+The component's public API exposes additional queries that are not wrapped on the `SslCommerzConvex` class. You can call them directly via `ctx.runQuery`:
+
+```ts
+import { components } from "./_generated/api";
+
+// Additional queries available on the component directly
+const session = await ctx.runQuery(
+  components.sslcommerz.public.getPaymentSessionBySessionKey,
+  { sessionKey: "abc123" },
+);
+
+const tx = await ctx.runQuery(
+  components.sslcommerz.public.getTransactionByValId,
+  { valId: "val_abc" },
+);
+
+const refunds = await ctx.runQuery(
+  components.sslcommerz.public.listRefundsByStatus,
+  { status: "refunded" },
+);
+
+const invoices = await ctx.runQuery(
+  components.sslcommerz.public.listInvoicesByPaymentStatus,
+  { paymentStatus: "Paid" },
+);
+
+const ipnEvent = await ctx.runQuery(
+  components.sslcommerz.public.getIpnEventByValId,
+  { valId: "val_abc" },
+);
+```
+
+See [Database Schema](/convex/database-schema) for the full list of indexes available on each table.

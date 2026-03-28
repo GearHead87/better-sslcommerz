@@ -1,0 +1,80 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Installation",
+  category: "Convex Component",
+  description:
+    "Install @better-sslcommerz/convex, register the component in convex.config.ts, run codegen to generate typed references, and configure your SSLCommerz credentials.",
+});
+
+# Installation
+
+## 1. Install the package
+
+```bash
+npm install @better-sslcommerz/convex
+# or
+pnpm add @better-sslcommerz/convex
+# or
+yarn add @better-sslcommerz/convex
+```
+
+The package requires `convex ^1.31.6` as a peer dependency. If it is not already in your project:
+
+```bash
+npm install convex
+```
+
+## 2. Register the component
+
+Open (or create) `convex.config.ts` at the root of your project and mount the SSLCommerz component:
+
+```ts
+// convex.config.ts
+import { defineApp } from "convex/server";
+import sslcommerz from "@better-sslcommerz/convex/convex.config";
+
+const app = defineApp();
+app.use(sslcommerz);
+
+export default app;
+```
+
+<Note>
+  If you already have a `convex.config.ts` with other components registered,
+  add the `app.use(sslcommerz)` line alongside them.
+</Note>
+
+## 3. Run codegen
+
+After registering the component, run Convex to generate typed API references:
+
+```bash
+npx convex dev
+```
+
+This updates `convex/_generated/api.ts` and adds a `sslcommerz` entry to the generated `components` object. You will pass `components.sslcommerz` to the `SslCommerzConvex` constructor.
+
+## 4. Set environment variables
+
+Add your SSLCommerz credentials to your environment. For local development, create or update `.env.local`:
+
+```bash
+SSLCOMMERZ_STORE_ID=your_store_id
+SSLCOMMERZ_STORE_PASSWD=your_store_password
+SSLCOMMERZ_ENVIRONMENT=sandbox
+```
+
+For production, set these in the Convex dashboard under **Settings → Environment Variables**.
+
+<Warning>
+  `SSLCOMMERZ_STORE_PASSWD` is a server-side secret. Never expose it in
+  client-side bundles or commit it to version control. Convex actions run
+  server-side, so reading from `process.env` inside an action is safe.
+</Warning>
+
+Environment variables are a fallback — you can also pass credentials directly to the `SslCommerzConvex` constructor. See [API Reference](/convex/api-reference) for the full `SslCommerzComponentConfig` options.
+
+## Next steps
+
+- [Quick Start](/convex/quick-start) — create the `SslCommerzConvex` instance, register routes, and initiate your first payment.

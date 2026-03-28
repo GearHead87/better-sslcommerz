@@ -1,0 +1,63 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Overview",
+  category: "Convex Component",
+  description:
+    "@better-sslcommerz/convex is a Convex component that persists SSLCommerz payment data and registers HTTP route handlers for gateway callbacks — sessions, transactions, refunds, invoices, and IPN events all stored automatically.",
+});
+
+# Convex Component
+
+`@better-sslcommerz/convex` is a [Convex](https://convex.dev) component that integrates SSLCommerz payments directly into your Convex application. Every gateway call — create session, validate order, refund, invoice — automatically persists the result to your Convex database, and the component registers all four gateway callback routes in a single method call.
+
+```ts
+import { SslCommerzConvex } from "@better-sslcommerz/convex";
+import { components } from "./_generated/api";
+
+const sslcommerz = new SslCommerzConvex(components.sslcommerz);
+
+// In a Convex action
+export const initiatePayment = action({
+  args: { tranId: v.string(), amount: v.number() },
+  handler: async (ctx, args) => {
+    const result = await sslcommerz.createPaymentSession(ctx, {
+      tranId: args.tranId,
+      totalAmount: args.amount,
+      currency: "BDT",
+      successUrl: "https://yourapp.com/payment/success",
+      failUrl: "https://yourapp.com/payment/fail",
+      cancelUrl: "https://yourapp.com/payment/cancel",
+      customerInfo: { /* ... */ },
+      productInfo: { /* ... */ },
+    });
+
+    return result.gatewayUrl; // redirect the customer here
+  },
+});
+```
+
+## What it provides
+
+- **Automatic persistence** — every gateway call writes the result to Convex. Payment sessions, transactions, refunds, invoices, and IPN events all have dedicated tables with useful indexes.
+- **Built-in HTTP route handlers** — one call to `registerRoutes(http)` registers `POST /sslcommerz/ipn`, `/sslcommerz/success`, `/sslcommerz/fail`, and `/sslcommerz/cancel`.
+- **IPN verification** — the IPN route parses the payload, records the raw event, calls `validateOrder` automatically, and marks the event verified. You get a clean `onIpn` callback with already-confirmed data.
+- **Query helpers** — read stored payment data from any Convex query, mutation, or action without writing your own indexes.
+- **Typed throughout** — all methods, arguments, and return values are fully typed in TypeScript.
+- **`convex-test` compatible** — a `./test` export registers the component in an in-memory environment for unit testing.
+
+## Prerequisites
+
+- A Convex project with `convex ^1.31.6` installed
+- SSLCommerz store credentials (`storeId` and `storePasswd`)
+- The `better-sslcommerz` base SDK (installed automatically as a dependency of this package)
+
+## How it relates to the base SDK
+
+`@better-sslcommerz/convex` wraps the `better-sslcommerz` client. Every action method (`createPaymentSession`, `validateOrder`, `refundInitiate`, etc.) calls the corresponding base SDK method and then persists the result. The request and response types for those gateway calls are identical to the base SDK — the existing [Core API](/core/create-session) and [Invoice API](/invoice/create-invoice) docs apply.
+
+## Start here
+
+- [Installation](/convex/installation) — install the package and register the component in `convex.config.ts`.
+- [Quick Start](/convex/quick-start) — instantiate the class, register routes, and run your first payment.
+- [HTTP Routes](/convex/http-routes) — customise paths, redirect URLs, and use the lifecycle callbacks.

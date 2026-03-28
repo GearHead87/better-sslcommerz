@@ -1,0 +1,318 @@
+import { docsMetadata } from "@/lib/utils";
+
+export const metadata = docsMetadata({
+  title: "Database Schema",
+  category: "Convex Component",
+  description:
+    "Reference for the five Convex tables created by @better-sslcommerz/convex — paymentSessions, transactions, refunds, invoices, and ipnEvents — with all fields, types, and available indexes.",
+});
+
+# Database Schema
+
+The component manages five Convex tables. Records are created and updated automatically as you call the component methods. You can query any table directly via `ctx.runQuery(components.sslcommerz.public.*)` or use the helper methods on `SslCommerzConvex`.
+
+<Note>
+  System fields `_id` and `_creationTime` added by Convex are present on every
+  document but are stripped from the objects returned by the component's public
+  query helpers. They are queryable if you access the internal Convex table
+  directly.
+</Note>
+
+---
+
+## `paymentSessions`
+
+One record per `createPaymentSession` call. Tracks the full lifecycle of a payment attempt.
+
+**Created by:** `createPaymentSession`
+**Updated by:** `validateOrder`, success/fail/cancel HTTP routes
+
+<Properties>
+  <Property name="tranId" type="string" required>
+    Your unique transaction ID — the value you passed to `createPaymentSession`.
+  </Property>
+  <Property name="sessionKey" type="string" required>
+    The `sessionkey` returned by SSLCommerz when the session was created.
+  </Property>
+  <Property name="gatewayUrl" type="string" required>
+    The `GatewayPageURL` returned by SSLCommerz — the URL the customer was redirected to.
+  </Property>
+  <Property name="status" type='"pending" | "success" | "failed" | "cancelled" | "expired"' required>
+    Current lifecycle status of the payment session.
+
+    | Value | Meaning |
+    | ----- | ------- |
+    | `pending` | Session created, customer has not completed payment |
+    | `success` | Payment confirmed via success redirect or IPN |
+    | `failed` | Payment failed at the gateway |
+    | `cancelled` | Customer cancelled before completing payment |
+    | `expired` | Session timed out |
+
+  </Property>
+  <Property name="amount" type="string" required>
+    The payment amount as a string, copied from your `totalAmount` input.
+  </Property>
+  <Property name="currency" type="string" required>
+    The 3-letter ISO currency code (e.g. `"BDT"`).
+  </Property>
+  <Property name="environment" type='"sandbox" | "live"' required>
+    The environment the session was created in.
+  </Property>
+  <Property name="userId" type="string" optional>
+    The `userId` you passed to `createPaymentSession`, if any. Useful for associating sessions with users in your own schema.
+  </Property>
+  <Property name="orgId" type="string" optional>
+    The `orgId` you passed to `createPaymentSession`, if any.
+  </Property>
+  <Property name="metadata" type="any" optional>
+    The `metadata` object you passed to `createPaymentSession`, if any.
+  </Property>
+  <Property name="valId" type="string" optional>
+    The SSLCommerz validation ID (`val_id`). Set after `validateOrder` is called.
+  </Property>
+  <Property name="bankTranId" type="string" optional>
+    The bank or gateway transaction reference. Set after validation.
+  </Property>
+  <Property name="cardType" type="string" optional>
+    The payment gateway name (e.g. `"VISA"`, `"bKash"`). Set after validation.
+  </Property>
+  <Property name="storeAmount" type="string" optional>
+    Net amount credited to your store account after SSLCommerz fees. Set after validation.
+  </Property>
+  <Property name="expiresAt" type="number" optional>
+    Optional Unix timestamp (milliseconds) for when the session expires. Not set by default.
+  </Property>
+  <Property name="createdAt" type="number" required>
+    Unix timestamp (milliseconds) when the record was first created.
+  </Property>
+  <Property name="updatedAt" type="number" required>
+    Unix timestamp (milliseconds) of the last update.
+  </Property>
+</Properties>
+
+**Indexes:**
+
+| Index name | Fields |
+| ---------- | ------ |
+| `by_tran_id` | `tranId` |
+| `by_session_key` | `sessionKey` |
+| `by_status` | `status` |
+| `by_user_id` | `userId` |
+| `by_org_id` | `orgId` |
+| `by_val_id` | `valId` |
+
+---
+
+## `transactions`
+
+One record per `validateOrder` call. Stores the full verified transaction detail from SSLCommerz. If `validateOrder` is called multiple times for the same `valId`, the record is updated in place.
+
+**Created/updated by:** `validateOrder`, `transactionQueryBySession`, `transactionQueryByTranId`
+
+<Properties>
+  <Property name="tranId" type="string" required>
+    Your transaction ID as returned by SSLCommerz in the validation response.
+  </Property>
+  <Property name="valId" type="string" required>
+    The SSLCommerz validation ID (`val_id`).
+  </Property>
+  <Property name="status" type="string" required>
+    The validation status string from SSLCommerz (e.g. `"VALID"`, `"VALIDATED"`, `"FAILED"`).
+  </Property>
+  <Property name="amount" type="string" required>
+    The validated transaction amount as a string.
+  </Property>
+  <Property name="currency" type="string" required>
+    The 3-letter ISO currency code.
+  </Property>
+  <Property name="bankTranId" type="string" optional>
+    Bank or gateway transaction reference.
+  </Property>
+  <Property name="riskLevel" type="string" optional>
+    Risk level flag from SSLCommerz (`"0"` safe, `"1"` risky).
+  </Property>
+  <Property name="riskTitle" type="string" optional>
+    Human-readable description of the risk flag.
+  </Property>
+  <Property name="raw" type="any" required>
+    The full, unmodified validation response object from SSLCommerz. Useful when you need fields not exposed by the typed properties above.
+  </Property>
+  <Property name="createdAt" type="number" required>
+    Unix timestamp (milliseconds) when the record was first created.
+  </Property>
+  <Property name="updatedAt" type="number" required>
+    Unix timestamp (milliseconds) of the last update.
+  </Property>
+</Properties>
+
+**Indexes:**
+
+| Index name | Fields |
+| ---------- | ------ |
+| `by_tran_id` | `tranId` |
+| `by_val_id` | `valId` |
+| `by_status` | `status` |
+
+---
+
+## `refunds`
+
+One record per refund, keyed by the `refund_ref_id` returned by SSLCommerz. Updated when `refundStatus` is polled.
+
+**Created/updated by:** `refundInitiate`, `refundStatus`
+
+<Properties>
+  <Property name="refundRefId" type="string" required>
+    The refund reference ID returned by SSLCommerz (`refund_ref_id`).
+  </Property>
+  <Property name="refundTransId" type="string" optional>
+    The SSLCommerz refund transaction ID (`trans_id` or `tran_id`), available after the refund is processed.
+  </Property>
+  <Property name="bankTranId" type="string" optional>
+    The original bank transaction ID the refund was raised against.
+  </Property>
+  <Property name="status" type="string" optional>
+    The refund status string from SSLCommerz (e.g. `"refunded"`, `"processing"`).
+  </Property>
+  <Property name="amount" type="string" optional>
+    The refund amount as a string.
+  </Property>
+  <Property name="initiatedOn" type="string" optional>
+    Date/time the refund was initiated, as returned by SSLCommerz.
+  </Property>
+  <Property name="refundedOn" type="string" optional>
+    Date/time the refund was completed, as returned by SSLCommerz.
+  </Property>
+  <Property name="raw" type="any" required>
+    The full, unmodified response object from SSLCommerz.
+  </Property>
+  <Property name="createdAt" type="number" required>
+    Unix timestamp (milliseconds) when the record was first created.
+  </Property>
+  <Property name="updatedAt" type="number" required>
+    Unix timestamp (milliseconds) of the last update.
+  </Property>
+</Properties>
+
+**Indexes:**
+
+| Index name | Fields |
+| ---------- | ------ |
+| `by_refund_ref_id` | `refundRefId` |
+| `by_refund_trans_id` | `refundTransId` |
+| `by_bank_tran_id` | `bankTranId` |
+| `by_status` | `status` |
+
+---
+
+## `invoices`
+
+One record per invoice. Updated on status checks and cancellations.
+
+**Created/updated by:** `createInvoice`, `invoiceStatus`, `invoiceCancel`
+
+<Properties>
+  <Property name="invoiceId" type="string" required>
+    The invoice ID returned by SSLCommerz (`invoice_id`).
+  </Property>
+  <Property name="refer" type="string" optional>
+    Your internal reference for the invoice (`refer`), if provided.
+  </Property>
+  <Property name="tranId" type="string" optional>
+    The transaction ID associated with the invoice payment, if available.
+  </Property>
+  <Property name="paymentStatus" type="string" optional>
+    The payment status of the invoice (e.g. `"Paid"`, `"Unpaid"`, `"Cancelled"`).
+  </Property>
+  <Property name="payUrl" type="string" optional>
+    The payment URL for the invoice. Populated from `pay_url` or `qr_image_pay_url` on creation.
+  </Property>
+  <Property name="qrImageUrl" type="string" optional>
+    URL of the QR code image for the invoice payment page.
+  </Property>
+  <Property name="status" type="string" required>
+    The invoice status string from SSLCommerz (e.g. `"active"`, `"cancelled"`).
+  </Property>
+  <Property name="raw" type="any" required>
+    The full, unmodified response object from SSLCommerz.
+  </Property>
+  <Property name="createdAt" type="number" required>
+    Unix timestamp (milliseconds) when the record was first created.
+  </Property>
+  <Property name="updatedAt" type="number" required>
+    Unix timestamp (milliseconds) of the last update.
+  </Property>
+</Properties>
+
+**Indexes:**
+
+| Index name | Fields |
+| ---------- | ------ |
+| `by_invoice_id` | `invoiceId` |
+| `by_refer` | `refer` |
+| `by_tran_id` | `tranId` |
+| `by_payment_status` | `paymentStatus` |
+
+---
+
+## `ipnEvents`
+
+One record per IPN POST received. The `verified` flag starts as `false` and is set to `true` once `validateOrder` confirms the payment inside the IPN route handler. If SSLCommerz sends a duplicate IPN for the same `valId`, the record is updated in place.
+
+**Created/updated by:** IPN route handler (`/sslcommerz/ipn`)
+
+<Properties>
+  <Property name="tranId" type="string" required>
+    Your transaction ID from the IPN payload.
+  </Property>
+  <Property name="valId" type="string" required>
+    The SSLCommerz validation ID from the IPN payload.
+  </Property>
+  <Property name="status" type="string" required>
+    The IPN status string (e.g. `"VALID"`, `"FAILED"`, `"CANCELLED"`).
+  </Property>
+  <Property name="amount" type="string" required>
+    The payment amount from the IPN payload.
+  </Property>
+  <Property name="storeAmount" type="string" required>
+    Net amount credited to your store account after fees.
+  </Property>
+  <Property name="currency" type="string" required>
+    The 3-letter ISO currency code.
+  </Property>
+  <Property name="cardType" type="string" required>
+    The payment gateway name (e.g. `"VISA"`, `"bKash"`).
+  </Property>
+  <Property name="bankTranId" type="string" optional>
+    Bank or gateway transaction reference.
+  </Property>
+  <Property name="cardNo" type="string" optional>
+    Masked card number or mobile banking account reference.
+  </Property>
+  <Property name="riskLevel" type="string" optional>
+    Risk level flag from SSLCommerz (`"0"` safe, `"1"` risky).
+  </Property>
+  <Property name="riskTitle" type="string" optional>
+    Human-readable description of the risk flag.
+  </Property>
+  <Property name="verified" type="boolean" required>
+    `false` when first recorded. Set to `true` after `validateOrder` confirms the payment.
+  </Property>
+  <Property name="rawPayload" type="any" required>
+    The full, raw IPN POST payload as received from SSLCommerz.
+  </Property>
+  <Property name="createdAt" type="number" required>
+    Unix timestamp (milliseconds) when the record was first created.
+  </Property>
+  <Property name="updatedAt" type="number" required>
+    Unix timestamp (milliseconds) of the last update.
+  </Property>
+</Properties>
+
+**Indexes:**
+
+| Index name | Fields |
+| ---------- | ------ |
+| `by_tran_id` | `tranId` |
+| `by_val_id` | `valId` |
+| `by_status` | `status` |
