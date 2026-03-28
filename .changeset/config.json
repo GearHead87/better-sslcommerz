@@ -5,7 +5,7 @@
   "fixed": [
     [
       "@better-sslcommerz/validators",
-      "better-sslcommerz",
+      "@better-sslcommerz/sdk",
       "@better-sslcommerz/convex"
     ]
   ],

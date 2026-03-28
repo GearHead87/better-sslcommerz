@@ -32,7 +32,7 @@ const ipnPayloadParseMock = vi.hoisted(() =>
   vi.fn((payload: unknown) => payload),
 );
 
-vi.mock("better-sslcommerz", () => {
+vi.mock("@better-sslcommerz/sdk", () => {
   return {
     createSslcommerzClient: vi.fn(() => ({
       core: {

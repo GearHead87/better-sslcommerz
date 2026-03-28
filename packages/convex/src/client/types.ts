@@ -1,4 +1,3 @@
-import type * as BetterSslcommerz from "better-sslcommerz";
 import type {
   GenericActionCtx,
   GenericDataModel,
@@ -6,6 +5,8 @@ import type {
   GenericQueryCtx,
   HttpRouter,
 } from "convex/server";
+
+import type * as BetterSslcommerz from "@better-sslcommerz/sdk";
 
 export type SslcommerzClient = ReturnType<
   typeof BetterSslcommerz.createSslcommerzClient

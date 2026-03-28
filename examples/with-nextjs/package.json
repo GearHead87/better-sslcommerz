@@ -17,8 +17,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-sslcommerz/sdk": "workspace:*",
     "@t3-oss/env-nextjs": "catalog:",
-    "better-sslcommerz": "workspace:*",
     "next": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

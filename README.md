@@ -18,18 +18,18 @@
 
 <p align="center"><strong>Production-ready TypeScript SDK for SSLCommerz payments, refunds, transaction queries, and invoices.</strong></p>
 
-`better-sslcommerz` provides a clean typed client for SSLCommerz v4 APIs with built-in request validation, optional response validation, and structured error handling.
+`@better-sslcommerz/sdk` provides a clean typed client for SSLCommerz v4 APIs with built-in request validation, optional response validation, and structured error handling.
 
 ## Install
 
 ```bash
-npm install better-sslcommerz
+npm install @better-sslcommerz/sdk
 ```
 
 ## Quick start
 
 ```ts
-import { createSslcommerzClient } from "better-sslcommerz";
+import { createSslcommerzClient } from "@better-sslcommerz/sdk";
 
 const client = createSslcommerzClient({
   storeId: process.env.SSLCOMMERZ_STORE_ID!,

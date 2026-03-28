@@ -4,12 +4,12 @@ export const metadata = docsMetadata({
   title: "Error Handling",
   category: "Reference",
   description:
-    "Understand the three error classes thrown by better-sslcommerz — SslcommerzError, SslcommerzHttpError, and SslcommerzValidationError — and how to catch and narrow them.",
+    "Understand the three error classes thrown by @better-sslcommerz/sdk — SslcommerzError, SslcommerzHttpError, and SslcommerzValidationError — and how to catch and narrow them.",
 });
 
 # Error Handling
 
-`better-sslcommerz` throws three typed error classes. All three extend the native `Error` class and are safe to use with `instanceof`.
+`@better-sslcommerz/sdk` throws three typed error classes. All three extend the native `Error` class and are safe to use with `instanceof`.
 
 ## Error hierarchy
 
@@ -27,7 +27,7 @@ Error
 The base class. All errors thrown by this package are instances of `SslcommerzError`, so catching it catches everything.
 
 ```ts
-import { SslcommerzError } from "better-sslcommerz";
+import { SslcommerzError } from "@better-sslcommerz/sdk";
 
 try {
   await client.core.createSession(input);
@@ -64,7 +64,7 @@ try {
 Thrown when SSLCommerz returns a non-2xx HTTP status code. This indicates a network-level or server-level failure (e.g. 500 Internal Server Error, 429 Too Many Requests).
 
 ```ts
-import { SslcommerzError, SslcommerzHttpError } from "better-sslcommerz";
+import { SslcommerzError, SslcommerzHttpError } from "@better-sslcommerz/sdk";
 
 try {
   await client.core.createSession(input);
@@ -117,7 +117,7 @@ import {
   SslcommerzError,
   SslcommerzHttpError,
   SslcommerzValidationError,
-} from "better-sslcommerz";
+} from "@better-sslcommerz/sdk";
 
 try {
   await client.core.createSession(input);
@@ -174,12 +174,13 @@ try {
 ## Full example with all error types
 
 ```ts
+import { z } from "zod/v4";
+
 import {
   SslcommerzError,
   SslcommerzHttpError,
   SslcommerzValidationError,
-} from "better-sslcommerz";
-import { z } from "zod/v4";
+} from "@better-sslcommerz/sdk";
 
 export async function initiatePayment(orderData: OrderData) {
   try {

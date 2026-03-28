@@ -1,5 +1,9 @@
-import { createSslcommerzClient, ipnPayloadSchema } from "better-sslcommerz";
 import { httpActionGeneric } from "convex/server";
+
+import {
+  createSslcommerzClient,
+  ipnPayloadSchema,
+} from "@better-sslcommerz/sdk";
 
 import type { ComponentApi } from "../component/_generated/component.js";
 import type {

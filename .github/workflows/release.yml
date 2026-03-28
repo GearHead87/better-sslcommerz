@@ -43,8 +43,8 @@ jobs:
       - name: Build validators
         run: pnpm --filter @better-sslcommerz/validators build
 
-      - name: Build better-sslcommerz
-        run: pnpm --filter better-sslcommerz build
+      - name: Build SDK package
+        run: pnpm --filter @better-sslcommerz/sdk build
 
       - name: Build convex package
         run: pnpm --filter @better-sslcommerz/convex build

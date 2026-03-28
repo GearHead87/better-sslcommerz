@@ -55,11 +55,11 @@ export const initiatePayment = action({
 
 - A Convex project with `convex ^1.31.6` installed
 - SSLCommerz store credentials (`storeId` and `storePasswd`)
-- The `better-sslcommerz` base SDK (installed automatically as a dependency of this package)
+- The `@better-sslcommerz/sdk` base SDK (installed automatically as a dependency of this package)
 
 ## How it relates to the base SDK
 
-`@better-sslcommerz/convex` wraps the `better-sslcommerz` client. Every action method (`createPaymentSession`, `validateOrder`, `refundInitiate`, etc.) calls the corresponding base SDK method and then persists the result. The request and response types for those gateway calls are identical to the base SDK — the existing [Core API](/core/create-session) and [Invoice API](/invoice/create-invoice) docs apply.
+`@better-sslcommerz/convex` wraps the `@better-sslcommerz/sdk` client. Every action method (`createPaymentSession`, `validateOrder`, `refundInitiate`, etc.) calls the corresponding base SDK method and then persists the result. The request and response types for those gateway calls are identical to the base SDK — the existing [Core API](/core/create-session) and [Invoice API](/invoice/create-invoice) docs apply.
 
 ## Start here
 

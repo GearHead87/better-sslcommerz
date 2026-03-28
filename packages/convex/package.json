@@ -58,7 +58,7 @@
     }
   },
   "dependencies": {
-    "better-sslcommerz": "workspace:^"
+    "@better-sslcommerz/sdk": "workspace:^"
   },
   "devDependencies": {
     "@better-sslcommerz/eslint-config": "workspace:*",

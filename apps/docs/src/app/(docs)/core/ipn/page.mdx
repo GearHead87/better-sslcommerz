@@ -43,10 +43,11 @@ const ipnPayload = client.core.parseIpnPayload(rawBody);
 
 ```ts
 // app/api/ipn/route.ts
-import type { IpnPayload } from "better-sslcommerz";
 import { NextResponse } from "next/server";
 import { sslcommerz } from "@/lib/sslcommerz";
-import { SslcommerzValidationError } from "better-sslcommerz";
+
+import type { IpnPayload } from "@better-sslcommerz/sdk";
+import { SslcommerzValidationError } from "@better-sslcommerz/sdk";
 
 export async function POST(request: Request) {
   // Parse the form-encoded body SSLCommerz sends

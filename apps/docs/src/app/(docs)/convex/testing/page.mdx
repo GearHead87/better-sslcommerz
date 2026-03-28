@@ -62,8 +62,9 @@ import { register } from "@better-sslcommerz/convex/test";
 import schema from "./schema";
 
 // Stub the base SDK so tests don't call the real gateway
-vi.mock("better-sslcommerz", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("better-sslcommerz")>();
+vi.mock("@better-sslcommerz/sdk", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@better-sslcommerz/sdk")>();
   return {
     ...actual,
     createSslcommerzClient: () => ({

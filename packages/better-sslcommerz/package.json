@@ -1,5 +1,5 @@
 {
-  "name": "better-sslcommerz",
+  "name": "@better-sslcommerz/sdk",
   "version": "0.1.0",
   "type": "module",
   "sideEffects": false,

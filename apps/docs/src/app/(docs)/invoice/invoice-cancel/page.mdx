@@ -42,7 +42,8 @@ const result = await client.invoice.invoiceCancel(input, options?);
 
 ```ts
 import { sslcommerz } from "@/lib/sslcommerz";
-import { SslcommerzHttpError } from "better-sslcommerz";
+
+import { SslcommerzHttpError } from "@better-sslcommerz/sdk";
 
 async function cancelInvoice(invoiceId: string) {
   // Optional: check status first to avoid cancelling a paid invoice

@@ -4,12 +4,12 @@ export const metadata = docsMetadata({
   title: "TypeScript Types",
   category: "Reference",
   description:
-    "Complete TypeScript type reference for better-sslcommerz — all input types, response types, utility types, and Zod schemas exported from the package.",
+    "Complete TypeScript type reference for @better-sslcommerz/sdk — all input types, response types, utility types, and Zod schemas exported from the package.",
 });
 
 # TypeScript Types
 
-All types and Zod schemas used internally by `better-sslcommerz` are re-exported from the package. You never need to install `@better-sslcommerz/validators` separately.
+All types and Zod schemas used internally by `@better-sslcommerz/sdk` are re-exported from the package. You never need to install `@better-sslcommerz/validators` separately.
 
 ```ts
 import type {
@@ -17,7 +17,7 @@ import type {
   CreateSessionResponse,
   IpnPayload,
   SslcommerzClient,
-} from "better-sslcommerz";
+} from "@better-sslcommerz/sdk";
 ```
 
 ---
@@ -39,7 +39,7 @@ These are the types for the first argument of each client method. They are the f
 | `InvoiceCancelInput`             | `client.invoice.invoiceCancel()`          |
 
 ```ts
-import type { CreateSessionInput } from "better-sslcommerz";
+import type { CreateSessionInput } from "@better-sslcommerz/sdk";
 
 function buildSessionInput(order: Order): CreateSessionInput {
   return {
@@ -85,7 +85,10 @@ These are the types returned by each client method.
 | `InvoiceCancelResponse`             | `client.invoice.invoiceCancel()`          |
 
 ```ts
-import type { IpnPayload, OrderValidationResponse } from "better-sslcommerz";
+import type {
+  IpnPayload,
+  OrderValidationResponse,
+} from "@better-sslcommerz/sdk";
 
 async function handleIpn(rawPayload: unknown): Promise<void> {
   const ipn: IpnPayload = sslcommerz.core.parseIpnPayload(rawPayload);
@@ -124,7 +127,7 @@ These include `store_id` and `store_passwd`. Use them when working with `@better
     The two environment modes supported by the client.
 
     ```ts
-    import type { SslcommerzEnvironment } from "better-sslcommerz";
+    import type { SslcommerzEnvironment } from "@better-sslcommerz/sdk";
     const env: SslcommerzEnvironment = "sandbox";
     ```
 
@@ -133,7 +136,7 @@ These include `store_id` and `store_passwd`. Use them when working with `@better
     The type of the object returned by `createSslcommerzClient()`. Contains `environment`, `baseUrl`, `core`, and `invoice`.
 
     ```ts
-    import type { SslcommerzClient } from "better-sslcommerz";
+    import type { SslcommerzClient } from "@better-sslcommerz/sdk";
 
     function useClient(client: SslcommerzClient) {
       console.log(client.environment); // "sandbox" | "live"
@@ -145,7 +148,7 @@ These include `store_id` and `store_passwd`. Use them when working with `@better
     The type of `client.core`. Useful when passing the core API as a parameter.
 
     ```ts
-    import type { SslcommerzCoreApi } from "better-sslcommerz";
+    import type { SslcommerzCoreApi } from "@better-sslcommerz/sdk";
 
     async function validatePayment(
       core: SslcommerzCoreApi,
@@ -163,7 +166,7 @@ These include `store_id` and `store_passwd`. Use them when working with `@better
     The type of the optional second argument accepted by every method. Contains `signal?: AbortSignal` and `validateResponse?: boolean`.
 
     ```ts
-    import type { SslcommerzRequestOptions } from "better-sslcommerz";
+    import type { SslcommerzRequestOptions } from "@better-sslcommerz/sdk";
 
     const options: SslcommerzRequestOptions = {
       signal: controller.signal,
@@ -179,7 +182,7 @@ These include `store_id` and `store_passwd`. Use them when working with `@better
     A type alias for any `fetch`-compatible function. Use it when typing the `fetch` option.
 
     ```ts
-    import type { FetchLike } from "better-sslcommerz";
+    import type { FetchLike } from "@better-sslcommerz/sdk";
 
     const myFetch: FetchLike = (url, init) => {
       console.log("Fetching:", url);
@@ -220,13 +223,13 @@ import {
   transactionQueryBySessionResponseSchema,
   transactionQueryByTranIdRequestSchema,
   transactionQueryByTranIdResponseSchema,
-} from "better-sslcommerz";
+} from "@better-sslcommerz/sdk";
 ```
 
 ### Example: validate an IPN payload manually
 
 ```ts
-import { ipnPayloadSchema } from "better-sslcommerz";
+import { ipnPayloadSchema } from "@better-sslcommerz/sdk";
 
 const result = ipnPayloadSchema.safeParse(rawPayload);
 if (!result.success) {
@@ -239,8 +242,9 @@ if (!result.success) {
 ### Example: extend a schema
 
 ```ts
-import { createSessionRequestSchema } from "better-sslcommerz";
 import { z } from "zod/v4";
+
+import { createSessionRequestSchema } from "@better-sslcommerz/sdk";
 
 // Add a custom required field on top of the standard schema
 const mySessionSchema = createSessionRequestSchema.extend({

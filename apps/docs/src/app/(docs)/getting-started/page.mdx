@@ -4,7 +4,7 @@ export const metadata = docsMetadata({
   title: "Installation",
   category: "Getting Started",
   description:
-    "Install better-sslcommerz, set up environment variables, create a client, and run your first payment session in minutes.",
+    "Install @better-sslcommerz/sdk, set up environment variables, create a client, and run your first payment session in minutes.",
 });
 
 # Installation
@@ -14,11 +14,11 @@ This guide walks you from a fresh project to a working payment session in the sa
 ## Install the package
 
 ```bash
-npm install better-sslcommerz
+npm install @better-sslcommerz/sdk
 # or
-pnpm add better-sslcommerz
+pnpm add @better-sslcommerz/sdk
 # or
-yarn add better-sslcommerz
+yarn add @better-sslcommerz/sdk
 ```
 
 ## Set environment variables
@@ -39,7 +39,7 @@ SSLCOMMERZ_STORE_PASSWD=your_store_password
 ## Create a client
 
 ```ts
-import { createSslcommerzClient } from "better-sslcommerz";
+import { createSslcommerzClient } from "@better-sslcommerz/sdk";
 
 export const sslcommerz = createSslcommerzClient({
   storeId: process.env.SSLCOMMERZ_STORE_ID!,

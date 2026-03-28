@@ -5,7 +5,7 @@
 Publish these three packages with automated versioning and changelog generation through GitHub Actions:
 
 - `@better-sslcommerz/validators`
-- `better-sslcommerz`
+- `@better-sslcommerz/sdk`
 - `@better-sslcommerz/convex`
 
 ## Current blockers to fix first
@@ -21,7 +21,7 @@ Use **Changesets + GitHub Actions** with a **lockstep version** for these three 
 
 Why lockstep now:
 
-- The packages are tightly related (`validators -> better-sslcommerz -> convex`).
+- The packages are tightly related (`validators -> sdk -> convex`).
 - It prevents dependency drift during early releases.
 - It keeps release communication simple.
 
@@ -38,7 +38,7 @@ Recommended baseline matrix:
 | Package | Initial version |
 | --- | --- |
 | `@better-sslcommerz/validators` | `0.1.0` |
-| `better-sslcommerz` | `0.1.0` |
+| `@better-sslcommerz/sdk` | `0.1.0` |
 | `@better-sslcommerz/convex` | `0.1.0` |
 
 ## File plan (create/update list)
@@ -49,7 +49,7 @@ Recommended baseline matrix:
    - Configure changelog generation and lockstep releases.
    - Add fixed group:
      - `@better-sslcommerz/validators`
-     - `better-sslcommerz`
+     - `@better-sslcommerz/sdk`
      - `@better-sslcommerz/convex`
 2. **Create** `.changeset/README.md`
    - Standard Changesets usage instructions.
@@ -78,7 +78,7 @@ Recommended baseline matrix:
 8. **Update** `packages/convex/package.json`
    - Remove `private: true`.
    - Add `publishConfig.access: "public"`.
-   - Ensure dependency on `better-sslcommerz` is workspace-aware (`workspace:^`) for monorepo release correctness.
+   - Ensure dependency on `@better-sslcommerz/sdk` is workspace-aware (`workspace:^`) for monorepo release correctness.
 
 ### C) CI/CD workflows
 
@@ -114,7 +114,7 @@ Recommended baseline matrix:
    - `pnpm lint`
    - `pnpm typecheck`
    - `pnpm --filter @better-sslcommerz/validators build`
-   - `pnpm --filter better-sslcommerz build`
+   - `pnpm --filter @better-sslcommerz/sdk build`
    - `pnpm --filter @better-sslcommerz/convex build`
    - `pnpm --filter @better-sslcommerz/convex test`
 4. Run `changesets/action`:
@@ -127,7 +127,7 @@ Recommended baseline matrix:
 Changesets handles topological publishing for changed packages; expected order is:
 
 1. `@better-sslcommerz/validators`
-2. `better-sslcommerz`
+2. `@better-sslcommerz/sdk`
 3. `@better-sslcommerz/convex`
 
 ## Changelog policy
@@ -144,7 +144,7 @@ Example changeset:
 ```md
 ---
 "@better-sslcommerz/validators": minor
-"better-sslcommerz": minor
+"@better-sslcommerz/sdk": minor
 "@better-sslcommerz/convex": minor
 ---
 
@@ -173,7 +173,7 @@ Workflow permissions in `release.yml`:
 6. Let `release.yml` publish to npm and create GitHub Releases.
 7. Verify:
    - `npm view @better-sslcommerz/validators version`
-   - `npm view better-sslcommerz version`
+   - `npm view @better-sslcommerz/sdk version`
    - `npm view @better-sslcommerz/convex version`
 
 ## Ongoing release cadence
