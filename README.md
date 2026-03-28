@@ -1,9 +1,8 @@
 # @better-sslcommerz/sdk
 
 <p align="center">
-  <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
-  <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
-  <a href="https://github.com/anomalyco/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/anomalyco/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://www.npmjs.com/package/@better-sslcommerz/sdk"><img alt="npm" src="https://img.shields.io/npm/v/%40better-sslcommerz%2Fsdk?style=flat-square" /></a>
+  <a href="https://github.com/GearHead87/better-sslcommerz/actions/workflows/ci.yml"><img alt="CI status" src="https://img.shields.io/github/actions/workflow/status/GearHead87/better-sslcommerz/ci.yml?style=flat-square&branch=main&label=ci" /></a>
 </p>
 
 <p align="center">
