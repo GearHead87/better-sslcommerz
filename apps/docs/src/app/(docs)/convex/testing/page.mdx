@@ -27,8 +27,10 @@ Import the `register` helper from `@better-sslcommerz/convex/test` and call it w
 // convex/payments.test.ts
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
-import { register } from "@better-sslcommerz/convex/test";
+
 import { SslCommerzConvex } from "@better-sslcommerz/convex";
+import { register } from "@better-sslcommerz/convex/test";
+
 import schema from "./schema"; // your app's schema
 
 test("createPaymentSession persists a session record", async () => {
@@ -40,8 +42,8 @@ test("createPaymentSession persists a session record", async () => {
 ```
 
 <Note>
-  Import `./test` as `@better-sslcommerz/convex/test` — it is a separate
-  entry point that is not included in the main bundle. It references Vite's
+  Import `./test` as `@better-sslcommerz/convex/test` — it is a separate entry
+  point that is not included in the main bundle. It references Vite's
   `import.meta.glob` internally and must only be imported in test files.
 </Note>
 
@@ -52,9 +54,11 @@ The following example uses `vi.mock` to stub the SSLCommerz HTTP call so the tes
 ```ts
 // convex/payments.test.ts
 import { convexTest } from "convex-test";
-import { expect, test, vi, beforeEach } from "vitest";
-import { register } from "@better-sslcommerz/convex/test";
+import { beforeEach, expect, test, vi } from "vitest";
+
 import { SslCommerzConvex } from "@better-sslcommerz/convex";
+import { register } from "@better-sslcommerz/convex/test";
+
 import schema from "./schema";
 
 // Stub the base SDK so tests don't call the real gateway
@@ -67,7 +71,8 @@ vi.mock("better-sslcommerz", async (importOriginal) => {
         createSession: vi.fn().mockResolvedValue({
           status: "SUCCESS",
           sessionkey: "test-session-key",
-          GatewayPageURL: "https://sandbox.sslcommerz.com/gwprocess/v4/pay.php?token=test",
+          GatewayPageURL:
+            "https://sandbox.sslcommerz.com/gwprocess/v4/pay.php?token=test",
         }),
         validateOrder: vi.fn().mockResolvedValue({
           status: "VALID",
@@ -160,7 +165,9 @@ register(t, name?);
     The `convex-test` instance returned by `convexTest(schema)`.
   </Property>
   <Property name="name" type="string" optional defaultValue='"sslcommerz"'>
-    The component name to register under. Must match the name used in `convex.config.ts` when `app.use(sslcommerz)` was called. Override only if you mounted the component under a custom name.
+    The component name to register under. Must match the name used in
+    `convex.config.ts` when `app.use(sslcommerz)` was called. Override only if
+    you mounted the component under a custom name.
   </Property>
 </Properties>
 

@@ -92,14 +92,14 @@ One record per `createPaymentSession` call. Tracks the full lifecycle of a payme
 
 **Indexes:**
 
-| Index name | Fields |
-| ---------- | ------ |
-| `by_tran_id` | `tranId` |
+| Index name       | Fields       |
+| ---------------- | ------------ |
+| `by_tran_id`     | `tranId`     |
 | `by_session_key` | `sessionKey` |
-| `by_status` | `status` |
-| `by_user_id` | `userId` |
-| `by_org_id` | `orgId` |
-| `by_val_id` | `valId` |
+| `by_status`      | `status`     |
+| `by_user_id`     | `userId`     |
+| `by_org_id`      | `orgId`      |
+| `by_val_id`      | `valId`      |
 
 ---
 
@@ -117,7 +117,8 @@ One record per `validateOrder` call. Stores the full verified transaction detail
     The SSLCommerz validation ID (`val_id`).
   </Property>
   <Property name="status" type="string" required>
-    The validation status string from SSLCommerz (e.g. `"VALID"`, `"VALIDATED"`, `"FAILED"`).
+    The validation status string from SSLCommerz (e.g. `"VALID"`, `"VALIDATED"`,
+    `"FAILED"`).
   </Property>
   <Property name="amount" type="string" required>
     The validated transaction amount as a string.
@@ -135,7 +136,8 @@ One record per `validateOrder` call. Stores the full verified transaction detail
     Human-readable description of the risk flag.
   </Property>
   <Property name="raw" type="any" required>
-    The full, unmodified validation response object from SSLCommerz. Useful when you need fields not exposed by the typed properties above.
+    The full, unmodified validation response object from SSLCommerz. Useful when
+    you need fields not exposed by the typed properties above.
   </Property>
   <Property name="createdAt" type="number" required>
     Unix timestamp (milliseconds) when the record was first created.
@@ -147,11 +149,11 @@ One record per `validateOrder` call. Stores the full verified transaction detail
 
 **Indexes:**
 
-| Index name | Fields |
-| ---------- | ------ |
+| Index name   | Fields   |
+| ------------ | -------- |
 | `by_tran_id` | `tranId` |
-| `by_val_id` | `valId` |
-| `by_status` | `status` |
+| `by_val_id`  | `valId`  |
+| `by_status`  | `status` |
 
 ---
 
@@ -166,13 +168,15 @@ One record per refund, keyed by the `refund_ref_id` returned by SSLCommerz. Upda
     The refund reference ID returned by SSLCommerz (`refund_ref_id`).
   </Property>
   <Property name="refundTransId" type="string" optional>
-    The SSLCommerz refund transaction ID (`trans_id` or `tran_id`), available after the refund is processed.
+    The SSLCommerz refund transaction ID (`trans_id` or `tran_id`), available
+    after the refund is processed.
   </Property>
   <Property name="bankTranId" type="string" optional>
     The original bank transaction ID the refund was raised against.
   </Property>
   <Property name="status" type="string" optional>
-    The refund status string from SSLCommerz (e.g. `"refunded"`, `"processing"`).
+    The refund status string from SSLCommerz (e.g. `"refunded"`,
+    `"processing"`).
   </Property>
   <Property name="amount" type="string" optional>
     The refund amount as a string.
@@ -196,12 +200,12 @@ One record per refund, keyed by the `refund_ref_id` returned by SSLCommerz. Upda
 
 **Indexes:**
 
-| Index name | Fields |
-| ---------- | ------ |
-| `by_refund_ref_id` | `refundRefId` |
+| Index name           | Fields          |
+| -------------------- | --------------- |
+| `by_refund_ref_id`   | `refundRefId`   |
 | `by_refund_trans_id` | `refundTransId` |
-| `by_bank_tran_id` | `bankTranId` |
-| `by_status` | `status` |
+| `by_bank_tran_id`    | `bankTranId`    |
+| `by_status`          | `status`        |
 
 ---
 
@@ -222,10 +226,12 @@ One record per invoice. Updated on status checks and cancellations.
     The transaction ID associated with the invoice payment, if available.
   </Property>
   <Property name="paymentStatus" type="string" optional>
-    The payment status of the invoice (e.g. `"Paid"`, `"Unpaid"`, `"Cancelled"`).
+    The payment status of the invoice (e.g. `"Paid"`, `"Unpaid"`,
+    `"Cancelled"`).
   </Property>
   <Property name="payUrl" type="string" optional>
-    The payment URL for the invoice. Populated from `pay_url` or `qr_image_pay_url` on creation.
+    The payment URL for the invoice. Populated from `pay_url` or
+    `qr_image_pay_url` on creation.
   </Property>
   <Property name="qrImageUrl" type="string" optional>
     URL of the QR code image for the invoice payment page.
@@ -246,11 +252,11 @@ One record per invoice. Updated on status checks and cancellations.
 
 **Indexes:**
 
-| Index name | Fields |
-| ---------- | ------ |
-| `by_invoice_id` | `invoiceId` |
-| `by_refer` | `refer` |
-| `by_tran_id` | `tranId` |
+| Index name          | Fields          |
+| ------------------- | --------------- |
+| `by_invoice_id`     | `invoiceId`     |
+| `by_refer`          | `refer`         |
+| `by_tran_id`        | `tranId`        |
 | `by_payment_status` | `paymentStatus` |
 
 ---
@@ -296,7 +302,8 @@ One record per IPN POST received. The `verified` flag starts as `false` and is s
     Human-readable description of the risk flag.
   </Property>
   <Property name="verified" type="boolean" required>
-    `false` when first recorded. Set to `true` after `validateOrder` confirms the payment.
+    `false` when first recorded. Set to `true` after `validateOrder` confirms
+    the payment.
   </Property>
   <Property name="rawPayload" type="any" required>
     The full, raw IPN POST payload as received from SSLCommerz.
@@ -311,8 +318,8 @@ One record per IPN POST received. The `verified` flag starts as `false` and is s
 
 **Indexes:**
 
-| Index name | Fields |
-| ---------- | ------ |
+| Index name   | Fields   |
+| ------------ | -------- |
 | `by_tran_id` | `tranId` |
-| `by_val_id` | `valId` |
-| `by_status` | `status` |
+| `by_val_id`  | `valId`  |
+| `by_status`  | `status` |

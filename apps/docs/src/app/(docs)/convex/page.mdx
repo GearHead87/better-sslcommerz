@@ -13,6 +13,7 @@ export const metadata = docsMetadata({
 
 ```ts
 import { SslCommerzConvex } from "@better-sslcommerz/convex";
+
 import { components } from "./_generated/api";
 
 const sslcommerz = new SslCommerzConvex(components.sslcommerz);
@@ -28,8 +29,12 @@ export const initiatePayment = action({
       successUrl: "https://yourapp.com/payment/success",
       failUrl: "https://yourapp.com/payment/fail",
       cancelUrl: "https://yourapp.com/payment/cancel",
-      customerInfo: { /* ... */ },
-      productInfo: { /* ... */ },
+      customerInfo: {
+        /* ... */
+      },
+      productInfo: {
+        /* ... */
+      },
     });
 
     return result.gatewayUrl; // redirect the customer here

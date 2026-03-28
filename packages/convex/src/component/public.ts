@@ -152,7 +152,9 @@ export const getRefundByRefId = query({
   handler: async (ctx, args) => {
     const refund = await ctx.db
       .query("refunds")
-      .withIndex("by_refund_ref_id", (q) => q.eq("refundRefId", args.refundRefId))
+      .withIndex("by_refund_ref_id", (q) =>
+        q.eq("refundRefId", args.refundRefId),
+      )
       .first();
 
     return omitSystemFields(refund);
@@ -397,7 +399,9 @@ export const upsertRefundRecord = mutation({
 
     const existing = await ctx.db
       .query("refunds")
-      .withIndex("by_refund_ref_id", (q) => q.eq("refundRefId", args.refundRefId))
+      .withIndex("by_refund_ref_id", (q) =>
+        q.eq("refundRefId", args.refundRefId),
+      )
       .first();
 
     if (existing) {

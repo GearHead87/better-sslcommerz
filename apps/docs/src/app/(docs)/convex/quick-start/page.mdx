@@ -17,8 +17,9 @@ Export a shared `SslCommerzConvex` instance from a helper module so you can impo
 
 ```ts
 // convex/lib/sslcommerz.ts
-import { components } from "../_generated/api";
 import { SslCommerzConvex } from "@better-sslcommerz/convex";
+
+import { components } from "../_generated/api";
 
 export const sslcommerz = new SslCommerzConvex(components.sslcommerz);
 ```
@@ -40,6 +41,7 @@ In your `convex/http.ts`, call `registerRoutes` to mount the four gateway callba
 ```ts
 // convex/http.ts
 import { httpRouter } from "convex/server";
+
 import { sslcommerz } from "./lib/sslcommerz";
 
 const http = httpRouter();
@@ -51,12 +53,12 @@ export default http;
 
 This registers:
 
-| Path | Trigger |
-| ---- | ------- |
-| `POST /sslcommerz/ipn` | SSLCommerz IPN webhook |
+| Path                       | Trigger                                    |
+| -------------------------- | ------------------------------------------ |
+| `POST /sslcommerz/ipn`     | SSLCommerz IPN webhook                     |
 | `POST /sslcommerz/success` | Customer redirect after successful payment |
-| `POST /sslcommerz/fail` | Customer redirect after payment failure |
-| `POST /sslcommerz/cancel` | Customer redirect after cancellation |
+| `POST /sslcommerz/fail`    | Customer redirect after payment failure    |
+| `POST /sslcommerz/cancel`  | Customer redirect after cancellation       |
 
 Copy the full IPN URL (`https://<your-deployment>.convex.site/sslcommerz/ipn`) into your SSLCommerz store settings as the IPN URL.
 
@@ -67,6 +69,7 @@ Call `createPaymentSession` inside a Convex action. The method calls the SSLComm
 ```ts
 // convex/payments.ts
 import { action, v } from "convex/server";
+
 import { sslcommerz } from "./lib/sslcommerz";
 
 export const initiatePayment = action({
@@ -116,8 +119,8 @@ export const initiatePayment = action({
 
 <Note>
   `tranId` must be unique for every payment attempt. SSLCommerz rejects
-  duplicate transaction IDs. Generate one from your order ID, a timestamp, or
-  a UUID.
+  duplicate transaction IDs. Generate one from your order ID, a timestamp, or a
+  UUID.
 </Note>
 
 ## 4. Redirect the customer
@@ -165,7 +168,9 @@ sslcommerz.registerRoutes(http, {
 
   onCancel: async (ctx, session) => {
     if (!session) return;
-    await ctx.runMutation(api.orders.markAsCancelled, { tranId: session.tranId });
+    await ctx.runMutation(api.orders.markAsCancelled, {
+      tranId: session.tranId,
+    });
   },
 
   onIpn: async (ctx, ipn, session) => {

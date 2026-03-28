@@ -15,6 +15,7 @@ The primary interface for the component. Instantiate it once and import it acros
 
 ```ts
 import { SslCommerzConvex } from "@better-sslcommerz/convex";
+
 import { components } from "./_generated/api";
 
 const sslcommerz = new SslCommerzConvex(components.sslcommerz);
@@ -28,10 +29,13 @@ new SslCommerzConvex(component: ComponentApi, config?: SslCommerzComponentConfig
 
 <Properties>
   <Property name="component" type="ComponentApi" required>
-    The generated component reference from `components.sslcommerz`. This is the typed handle Convex generates after you register the component and run codegen.
+    The generated component reference from `components.sslcommerz`. This is the
+    typed handle Convex generates after you register the component and run
+    codegen.
   </Property>
   <Property name="config" type="SslCommerzComponentConfig" optional>
-    Optional credential and environment configuration. When omitted, all values fall back to environment variables. See `SslCommerzComponentConfig` below.
+    Optional credential and environment configuration. When omitted, all values
+    fall back to environment variables. See `SslCommerzComponentConfig` below.
   </Property>
 </Properties>
 
@@ -50,16 +54,31 @@ interface SslCommerzComponentConfig {
 
 <Properties>
   <Property name="storeId" type="string" optional>
-    Your SSLCommerz store ID. Falls back to the `SSLCOMMERZ_STORE_ID` environment variable. Throws at call time if neither is set.
+    Your SSLCommerz store ID. Falls back to the `SSLCOMMERZ_STORE_ID`
+    environment variable. Throws at call time if neither is set.
   </Property>
   <Property name="storePasswd" type="string" optional>
-    Your SSLCommerz store password. Falls back to `SSLCOMMERZ_STORE_PASSWD`. Throws at call time if neither is set.
+    Your SSLCommerz store password. Falls back to `SSLCOMMERZ_STORE_PASSWD`.
+    Throws at call time if neither is set.
   </Property>
-  <Property name="environment" type='"sandbox" | "live"' optional defaultValue='"sandbox"'>
-    The SSLCommerz environment to target. Falls back to `SSLCOMMERZ_ENVIRONMENT`. Defaults to `"sandbox"` if neither is set.
+  <Property
+    name="environment"
+    type='"sandbox" | "live"'
+    optional
+    defaultValue='"sandbox"'
+  >
+    The SSLCommerz environment to target. Falls back to
+    `SSLCOMMERZ_ENVIRONMENT`. Defaults to `"sandbox"` if neither is set.
   </Property>
-  <Property name="validateResponse" type="boolean" optional defaultValue="false">
-    When `true`, every API response is validated against its Zod schema before being returned. Corresponds to the same option on the base `createSslcommerzClient`. See [Configuration](/configuration).
+  <Property
+    name="validateResponse"
+    type="boolean"
+    optional
+    defaultValue="false"
+  >
+    When `true`, every API response is validated against its Zod schema before
+    being returned. Corresponds to the same option on the base
+    `createSslcommerzClient`. See [Configuration](/configuration).
   </Property>
 </Properties>
 
@@ -231,16 +250,16 @@ Calls `client.invoice.invoiceCancel()` and updates the `invoices` record. See [C
 
 These methods proxy to `ctx.runQuery` against the component's public queries. They work from any Convex context.
 
-| Method | Args | Returns |
-| ------ | ---- | ------- |
-| `getPaymentSession(ctx, { tranId })` | `tranId: string` | Session record or `null` |
-| `listPaymentSessionsByStatus(ctx, { status })` | `status: "pending" \| "success" \| "failed" \| "cancelled" \| "expired"` | Session array |
-| `listPaymentSessionsByUserId(ctx, { userId })` | `userId: string` | Session array |
-| `listPaymentSessionsByOrgId(ctx, { orgId })` | `orgId: string` | Session array |
-| `getTransactionByTranId(ctx, { tranId })` | `tranId: string` | Transaction record or `null` |
-| `getRefundByRefId(ctx, { refundRefId })` | `refundRefId: string` | Refund record or `null` |
-| `getInvoiceById(ctx, { invoiceId })` | `invoiceId: string` | Invoice record or `null` |
-| `listIpnEventsByTranId(ctx, { tranId })` | `tranId: string` | IPN event array |
+| Method                                         | Args                                                                     | Returns                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------- |
+| `getPaymentSession(ctx, { tranId })`           | `tranId: string`                                                         | Session record or `null`     |
+| `listPaymentSessionsByStatus(ctx, { status })` | `status: "pending" \| "success" \| "failed" \| "cancelled" \| "expired"` | Session array                |
+| `listPaymentSessionsByUserId(ctx, { userId })` | `userId: string`                                                         | Session array                |
+| `listPaymentSessionsByOrgId(ctx, { orgId })`   | `orgId: string`                                                          | Session array                |
+| `getTransactionByTranId(ctx, { tranId })`      | `tranId: string`                                                         | Transaction record or `null` |
+| `getRefundByRefId(ctx, { refundRefId })`       | `refundRefId: string`                                                    | Refund record or `null`      |
+| `getInvoiceById(ctx, { invoiceId })`           | `invoiceId: string`                                                      | Invoice record or `null`     |
+| `listIpnEventsByTranId(ctx, { tranId })`       | `tranId: string`                                                         | IPN event array              |
 
 ---
 
@@ -268,14 +287,18 @@ Validates and parses an unknown IPN POST body against the `ipnPayloadSchema` Zod
 
 ```ts
 interface RegisterRoutesConfig {
-  ipnPath?: string;          // default: "/sslcommerz/ipn"
-  successPath?: string;      // default: "/sslcommerz/success"
-  failPath?: string;         // default: "/sslcommerz/fail"
-  cancelPath?: string;       // default: "/sslcommerz/cancel"
+  ipnPath?: string; // default: "/sslcommerz/ipn"
+  successPath?: string; // default: "/sslcommerz/success"
+  failPath?: string; // default: "/sslcommerz/fail"
+  cancelPath?: string; // default: "/sslcommerz/cancel"
   successRedirectUrl?: string; // default: "/"
-  failRedirectUrl?: string;    // default: "/"
-  cancelRedirectUrl?: string;  // default: "/"
-  onIpn?: (ctx: RunMutationCtx, ipn: IpnPayload, session: unknown) => Promise<void>;
+  failRedirectUrl?: string; // default: "/"
+  cancelRedirectUrl?: string; // default: "/"
+  onIpn?: (
+    ctx: RunMutationCtx,
+    ipn: IpnPayload,
+    session: unknown,
+  ) => Promise<void>;
   onSuccess?: (ctx: RunMutationCtx, session: unknown) => Promise<void>;
   onFail?: (ctx: RunMutationCtx, session: unknown) => Promise<void>;
   onCancel?: (ctx: RunMutationCtx, session: unknown) => Promise<void>;
@@ -369,12 +392,13 @@ An alternative to the class when you prefer a functional style:
 
 ```ts
 import { registerRoutes } from "@better-sslcommerz/convex";
+
 import { components } from "./_generated/api";
 
 registerRoutes(
   http,
   components.sslcommerz,
-  routesConfig,    // RegisterRoutesConfig — optional
+  routesConfig, // RegisterRoutesConfig — optional
   componentConfig, // SslCommerzComponentConfig — optional
 );
 ```

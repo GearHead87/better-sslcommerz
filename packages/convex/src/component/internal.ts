@@ -13,7 +13,11 @@ const paymentSessionStatus = v.union(
 const mapGatewayStatusToSessionStatus = (status: string) => {
   const normalized = status.trim().toUpperCase();
 
-  if (normalized === "VALID" || normalized === "VALIDATED" || normalized === "SUCCESS") {
+  if (
+    normalized === "VALID" ||
+    normalized === "VALIDATED" ||
+    normalized === "SUCCESS"
+  ) {
     return "success" as const;
   }
 

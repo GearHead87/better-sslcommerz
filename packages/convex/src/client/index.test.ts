@@ -1,5 +1,4 @@
 import type { HttpRouter } from "convex/server";
-
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { registerRoutes, SslCommerzConvex } from "./index.js";
@@ -103,7 +102,9 @@ const buildFormRequest = (path: string, body: Record<string, string>) =>
   });
 
 const buildRouteCtx = () => ({
-  runQuery: vi.fn().mockResolvedValue({ tranId: "tran_test", status: "pending" }),
+  runQuery: vi
+    .fn()
+    .mockResolvedValue({ tranId: "tran_test", status: "pending" }),
   runMutation: vi.fn().mockResolvedValue(null),
   runAction: vi.fn(),
 });
@@ -245,8 +246,8 @@ describe("registerRoutes", () => {
     const { route } = registerTestRoutes();
 
     expect(route).toHaveBeenCalledTimes(4);
-    const paths = route.mock.calls.map((call) =>
-      (call[0] as { path: string }).path,
+    const paths = route.mock.calls.map(
+      (call) => (call[0] as { path: string }).path,
     );
     expect(paths).toContain("/sslcommerz/ipn");
     expect(paths).toContain("/sslcommerz/success");
@@ -283,7 +284,9 @@ describe("registerRoutes", () => {
         verified: false,
       }),
     );
-    expect(sslcommerzMock.validateOrder).toHaveBeenCalledWith({ val_id: "val_ipn" });
+    expect(sslcommerzMock.validateOrder).toHaveBeenCalledWith({
+      val_id: "val_ipn",
+    });
     expect(ctx.runMutation).toHaveBeenCalledWith(
       components.sslcommerz.internal.markIpnVerified,
       { valId: "val_ipn" },
@@ -338,7 +341,9 @@ describe("registerRoutes", () => {
 
     const response = await successRoute.handler(ctx, request);
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("https://app.example/success");
+    expect(response.headers.get("location")).toBe(
+      "https://app.example/success",
+    );
 
     expect(ctx.runMutation).toHaveBeenCalledWith(
       components.sslcommerz.internal.setPaymentSessionStatus,

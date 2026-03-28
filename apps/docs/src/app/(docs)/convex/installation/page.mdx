@@ -32,6 +32,7 @@ Open (or create) `convex.config.ts` at the root of your project and mount the SS
 ```ts
 // convex.config.ts
 import { defineApp } from "convex/server";
+
 import sslcommerz from "@better-sslcommerz/convex/convex.config";
 
 const app = defineApp();
@@ -41,8 +42,8 @@ export default app;
 ```
 
 <Note>
-  If you already have a `convex.config.ts` with other components registered,
-  add the `app.use(sslcommerz)` line alongside them.
+  If you already have a `convex.config.ts` with other components registered, add
+  the `app.use(sslcommerz)` line alongside them.
 </Note>
 
 ## 3. Run codegen

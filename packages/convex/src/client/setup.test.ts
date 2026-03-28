@@ -1,11 +1,8 @@
 /// <reference types="vite/client" />
 
-import {
-  componentsGeneric,
-  defineSchema,
-} from "convex/server";
 import type { GenericSchema, SchemaDefinition } from "convex/server";
 import { convexTest } from "convex-test";
+import { componentsGeneric, defineSchema } from "convex/server";
 import { expect, test } from "vitest";
 
 import type { ComponentApi } from "../component/_generated/component.js";

@@ -1,3 +1,4 @@
+import type * as BetterSslcommerz from "better-sslcommerz";
 import type {
   GenericActionCtx,
   GenericDataModel,
@@ -6,15 +7,16 @@ import type {
   HttpRouter,
 } from "convex/server";
 
-import type * as BetterSslcommerz from "better-sslcommerz";
-
 export type SslcommerzClient = ReturnType<
   typeof BetterSslcommerz.createSslcommerzClient
 >;
 type SslcommerzCoreApi = SslcommerzClient["core"];
 type SslcommerzInvoiceApi = SslcommerzClient["invoice"];
 
-type MethodInput<T> = T extends (input: infer TInput, ...rest: unknown[]) => unknown
+type MethodInput<T> = T extends (
+  input: infer TInput,
+  ...rest: unknown[]
+) => unknown
   ? TInput
   : never;
 type MethodOutput<T> = T extends (...args: unknown[]) => infer TOutput
@@ -22,16 +24,22 @@ type MethodOutput<T> = T extends (...args: unknown[]) => infer TOutput
   : never;
 
 export type SslcommerzEnvironment = SslcommerzClient["environment"];
-export type ValidateOrderInput = MethodInput<SslcommerzCoreApi["validateOrder"]>;
+export type ValidateOrderInput = MethodInput<
+  SslcommerzCoreApi["validateOrder"]
+>;
 export type OrderValidationResponse = MethodOutput<
   SslcommerzCoreApi["validateOrder"]
 >;
-export type RefundInitiateInput = MethodInput<SslcommerzCoreApi["refundInitiate"]>;
+export type RefundInitiateInput = MethodInput<
+  SslcommerzCoreApi["refundInitiate"]
+>;
 export type RefundInitiateResponse = MethodOutput<
   SslcommerzCoreApi["refundInitiate"]
 >;
 export type RefundStatusInput = MethodInput<SslcommerzCoreApi["refundStatus"]>;
-export type RefundStatusResponse = MethodOutput<SslcommerzCoreApi["refundStatus"]>;
+export type RefundStatusResponse = MethodOutput<
+  SslcommerzCoreApi["refundStatus"]
+>;
 export type TransactionQueryBySessionInput = MethodInput<
   SslcommerzCoreApi["transactionQueryBySession"]
 >;
@@ -45,16 +53,24 @@ export type TransactionQueryByTranIdResponse = MethodOutput<
   SslcommerzCoreApi["transactionQueryByTranId"]
 >;
 export type IpnPayload = MethodOutput<SslcommerzCoreApi["parseIpnPayload"]>;
-export type CreateSessionResponse = MethodOutput<SslcommerzCoreApi["createSession"]>;
-export type CreateInvoiceInput = MethodInput<SslcommerzInvoiceApi["createInvoice"]>;
+export type CreateSessionResponse = MethodOutput<
+  SslcommerzCoreApi["createSession"]
+>;
+export type CreateInvoiceInput = MethodInput<
+  SslcommerzInvoiceApi["createInvoice"]
+>;
 export type CreateInvoiceResponse = MethodOutput<
   SslcommerzInvoiceApi["createInvoice"]
 >;
-export type InvoiceStatusInput = MethodInput<SslcommerzInvoiceApi["invoiceStatus"]>;
+export type InvoiceStatusInput = MethodInput<
+  SslcommerzInvoiceApi["invoiceStatus"]
+>;
 export type InvoiceStatusResponse = MethodOutput<
   SslcommerzInvoiceApi["invoiceStatus"]
 >;
-export type InvoiceCancelInput = MethodInput<SslcommerzInvoiceApi["invoiceCancel"]>;
+export type InvoiceCancelInput = MethodInput<
+  SslcommerzInvoiceApi["invoiceCancel"]
+>;
 export type InvoiceCancelResponse = MethodOutput<
   SslcommerzInvoiceApi["invoiceCancel"]
 >;
@@ -163,6 +179,4 @@ export interface RegisterRoutesConfig {
   onCancel?: (ctx: RunMutationCtx, session: unknown) => Promise<void>;
 }
 
-export type {
-  HttpRouter,
-};
+export type { HttpRouter };

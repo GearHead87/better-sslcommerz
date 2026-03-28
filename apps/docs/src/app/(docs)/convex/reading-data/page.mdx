@@ -36,7 +36,11 @@ const pending = await sslcommerz.listPaymentSessionsByStatus(ctx, {
 ```
 
 <Properties>
-  <Property name="status" type='"pending" | "success" | "failed" | "cancelled" | "expired"' required>
+  <Property
+    name="status"
+    type='"pending" | "success" | "failed" | "cancelled" | "expired"'
+    required
+  >
     The session lifecycle status to filter by.
   </Property>
 </Properties>
@@ -119,7 +123,8 @@ All helpers work from queries, mutations, and actions. Any standard Convex conte
 
 ```ts
 // convex/orders.ts
-import { query, action, v } from "convex/server";
+import { action, query, v } from "convex/server";
+
 import { sslcommerz } from "./lib/sslcommerz";
 
 export const getOrderPayment = query({

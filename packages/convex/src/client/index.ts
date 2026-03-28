@@ -1,6 +1,5 @@
-import { httpActionGeneric } from "convex/server";
-
 import { createSslcommerzClient, ipnPayloadSchema } from "better-sslcommerz";
+import { httpActionGeneric } from "convex/server";
 
 import type { ComponentApi } from "../component/_generated/component.js";
 import type {
@@ -44,7 +43,9 @@ const asString = (value: number | string | null | undefined) => {
   return String(value);
 };
 
-const parseFormBody = async (request: Request): Promise<Record<string, string>> => {
+const parseFormBody = async (
+  request: Request,
+): Promise<Record<string, string>> => {
   const body = await request.text();
   const params = new URLSearchParams(body);
 
@@ -221,26 +222,32 @@ export class SslCommerzConvex {
     const client: SslcommerzClient = this.createClient();
     const response = await client.core.validateOrder(args);
 
-    await ctx.runMutation(this.component.public.upsertTransactionFromValidation, {
-      tranId: response.tran_id,
-      valId: response.val_id,
-      status: response.status,
-      amount: String(response.amount),
-      currency: response.currency,
-      bankTranId: response.bank_tran_id,
-      riskLevel: asString(response.risk_level),
-      riskTitle: response.risk_title,
-      raw: response,
-    });
+    await ctx.runMutation(
+      this.component.public.upsertTransactionFromValidation,
+      {
+        tranId: response.tran_id,
+        valId: response.val_id,
+        status: response.status,
+        amount: String(response.amount),
+        currency: response.currency,
+        bankTranId: response.bank_tran_id,
+        riskLevel: asString(response.risk_level),
+        riskTitle: response.risk_title,
+        raw: response,
+      },
+    );
 
-    await ctx.runMutation(this.component.internal.syncPaymentSessionFromGateway, {
-      tranId: response.tran_id,
-      gatewayStatus: response.status,
-      valId: response.val_id,
-      bankTranId: response.bank_tran_id,
-      cardType: response.card_type,
-      storeAmount: asString(response.store_amount),
-    });
+    await ctx.runMutation(
+      this.component.internal.syncPaymentSessionFromGateway,
+      {
+        tranId: response.tran_id,
+        gatewayStatus: response.status,
+        valId: response.val_id,
+        bankTranId: response.bank_tran_id,
+        cardType: response.card_type,
+        storeAmount: asString(response.store_amount),
+      },
+    );
 
     return response;
   }
@@ -295,26 +302,32 @@ export class SslCommerzConvex {
     const client: SslcommerzClient = this.createClient();
     const response = await client.core.transactionQueryBySession(args);
 
-    await ctx.runMutation(this.component.public.upsertTransactionFromValidation, {
-      tranId: response.tran_id,
-      valId: response.val_id,
-      status: response.status,
-      amount: String(response.amount),
-      currency: response.currency,
-      bankTranId: response.bank_tran_id,
-      riskLevel: asString(response.risk_level),
-      riskTitle: response.risk_title,
-      raw: response,
-    });
+    await ctx.runMutation(
+      this.component.public.upsertTransactionFromValidation,
+      {
+        tranId: response.tran_id,
+        valId: response.val_id,
+        status: response.status,
+        amount: String(response.amount),
+        currency: response.currency,
+        bankTranId: response.bank_tran_id,
+        riskLevel: asString(response.risk_level),
+        riskTitle: response.risk_title,
+        raw: response,
+      },
+    );
 
-    await ctx.runMutation(this.component.internal.syncPaymentSessionFromGateway, {
-      tranId: response.tran_id,
-      gatewayStatus: response.status,
-      valId: response.val_id,
-      bankTranId: response.bank_tran_id,
-      cardType: response.card_type,
-      storeAmount: asString(response.store_amount),
-    });
+    await ctx.runMutation(
+      this.component.internal.syncPaymentSessionFromGateway,
+      {
+        tranId: response.tran_id,
+        gatewayStatus: response.status,
+        valId: response.val_id,
+        bankTranId: response.bank_tran_id,
+        cardType: response.card_type,
+        storeAmount: asString(response.store_amount),
+      },
+    );
 
     return response;
   }
@@ -328,26 +341,32 @@ export class SslCommerzConvex {
 
     if (Array.isArray(response.element)) {
       for (const item of response.element) {
-        await ctx.runMutation(this.component.public.upsertTransactionFromValidation, {
-          tranId: item.tran_id,
-          valId: item.val_id,
-          status: item.status,
-          amount: String(item.amount),
-          currency: item.currency,
-          bankTranId: item.bank_tran_id,
-          riskLevel: asString(item.risk_level),
-          riskTitle: item.risk_title,
-          raw: item,
-        });
+        await ctx.runMutation(
+          this.component.public.upsertTransactionFromValidation,
+          {
+            tranId: item.tran_id,
+            valId: item.val_id,
+            status: item.status,
+            amount: String(item.amount),
+            currency: item.currency,
+            bankTranId: item.bank_tran_id,
+            riskLevel: asString(item.risk_level),
+            riskTitle: item.risk_title,
+            raw: item,
+          },
+        );
 
-        await ctx.runMutation(this.component.internal.syncPaymentSessionFromGateway, {
-          tranId: item.tran_id,
-          gatewayStatus: item.status,
-          valId: item.val_id,
-          bankTranId: item.bank_tran_id,
-          cardType: item.card_type,
-          storeAmount: asString(item.store_amount),
-        });
+        await ctx.runMutation(
+          this.component.internal.syncPaymentSessionFromGateway,
+          {
+            tranId: item.tran_id,
+            gatewayStatus: item.status,
+            valId: item.val_id,
+            bankTranId: item.bank_tran_id,
+            cardType: item.card_type,
+            storeAmount: asString(item.store_amount),
+          },
+        );
       }
     }
 
@@ -423,13 +442,24 @@ export class SslCommerzConvex {
 
   public listPaymentSessionsByStatus(
     ctx: RunQueryCtx,
-    args: { status: "pending" | "success" | "failed" | "cancelled" | "expired" },
+    args: {
+      status: "pending" | "success" | "failed" | "cancelled" | "expired";
+    },
   ) {
-    return ctx.runQuery(this.component.public.listPaymentSessionsByStatus, args);
+    return ctx.runQuery(
+      this.component.public.listPaymentSessionsByStatus,
+      args,
+    );
   }
 
-  public listPaymentSessionsByUserId(ctx: RunQueryCtx, args: { userId: string }) {
-    return ctx.runQuery(this.component.public.listPaymentSessionsByUserId, args);
+  public listPaymentSessionsByUserId(
+    ctx: RunQueryCtx,
+    args: { userId: string },
+  ) {
+    return ctx.runQuery(
+      this.component.public.listPaymentSessionsByUserId,
+      args,
+    );
   }
 
   public listPaymentSessionsByOrgId(ctx: RunQueryCtx, args: { orgId: string }) {
@@ -496,9 +526,12 @@ export class SslCommerzConvex {
           console.error("SSLCommerz IPN validation failed", error);
         }
 
-        const session = await ctx.runQuery(this.component.public.getPaymentSession, {
-          tranId: ipn.tran_id,
-        });
+        const session = await ctx.runQuery(
+          this.component.public.getPaymentSession,
+          {
+            tranId: ipn.tran_id,
+          },
+        );
 
         if (config?.onIpn) {
           await config.onIpn(ctx, ipn, session);
@@ -522,11 +555,14 @@ export class SslCommerzConvex {
         const valId = payload.val_id;
 
         if (tranId) {
-          await ctx.runMutation(this.component.internal.setPaymentSessionStatus, {
-            tranId,
-            status: "success",
-            valId,
-          });
+          await ctx.runMutation(
+            this.component.internal.setPaymentSessionStatus,
+            {
+              tranId,
+              status: "success",
+              valId,
+            },
+          );
         }
 
         if (valId) {
@@ -538,7 +574,9 @@ export class SslCommerzConvex {
         }
 
         const session = tranId
-          ? await ctx.runQuery(this.component.public.getPaymentSession, { tranId })
+          ? await ctx.runQuery(this.component.public.getPaymentSession, {
+              tranId,
+            })
           : null;
 
         if (config?.onSuccess) {
@@ -557,14 +595,19 @@ export class SslCommerzConvex {
         const tranId = payload.tran_id;
 
         if (tranId) {
-          await ctx.runMutation(this.component.internal.setPaymentSessionStatus, {
-            tranId,
-            status: "failed",
-          });
+          await ctx.runMutation(
+            this.component.internal.setPaymentSessionStatus,
+            {
+              tranId,
+              status: "failed",
+            },
+          );
         }
 
         const session = tranId
-          ? await ctx.runQuery(this.component.public.getPaymentSession, { tranId })
+          ? await ctx.runQuery(this.component.public.getPaymentSession, {
+              tranId,
+            })
           : null;
 
         if (config?.onFail) {
@@ -583,14 +626,19 @@ export class SslCommerzConvex {
         const tranId = payload.tran_id;
 
         if (tranId) {
-          await ctx.runMutation(this.component.internal.setPaymentSessionStatus, {
-            tranId,
-            status: "cancelled",
-          });
+          await ctx.runMutation(
+            this.component.internal.setPaymentSessionStatus,
+            {
+              tranId,
+              status: "cancelled",
+            },
+          );
         }
 
         const session = tranId
-          ? await ctx.runQuery(this.component.public.getPaymentSession, { tranId })
+          ? await ctx.runQuery(this.component.public.getPaymentSession, {
+              tranId,
+            })
           : null;
 
         if (config?.onCancel) {

@@ -14,6 +14,7 @@ export const metadata = docsMetadata({
 ```ts
 // convex/http.ts
 import { httpRouter } from "convex/server";
+
 import { sslcommerz } from "./lib/sslcommerz";
 
 const http = httpRouter();
@@ -23,12 +24,12 @@ export default http;
 
 ## Default routes
 
-| Path | Method | Trigger |
-| ---- | ------ | ------- |
-| `/sslcommerz/ipn` | POST | SSLCommerz IPN webhook — fires server-to-server after every payment attempt |
-| `/sslcommerz/success` | POST | Customer browser redirect after a successful payment |
-| `/sslcommerz/fail` | POST | Customer browser redirect after a failed payment |
-| `/sslcommerz/cancel` | POST | Customer browser redirect after the customer cancels |
+| Path                  | Method | Trigger                                                                     |
+| --------------------- | ------ | --------------------------------------------------------------------------- |
+| `/sslcommerz/ipn`     | POST   | SSLCommerz IPN webhook — fires server-to-server after every payment attempt |
+| `/sslcommerz/success` | POST   | Customer browser redirect after a successful payment                        |
+| `/sslcommerz/fail`    | POST   | Customer browser redirect after a failed payment                            |
+| `/sslcommerz/cancel`  | POST   | Customer browser redirect after the customer cancels                        |
 
 Your Convex deployment exposes these at `https://<your-deployment>.convex.site`. Provide the full IPN URL in the `ipn_url` field of `createPaymentSession` and in your SSLCommerz store settings.
 
@@ -44,8 +45,8 @@ The IPN route fires server-to-server from SSLCommerz, independent of the custome
 6. Returns `{ received: true }` with HTTP 200.
 
 <Warning>
-  The IPN route calls `validateOrder` internally before invoking `onIpn`. You
-  do not need to validate again inside the callback — the data passed to it has
+  The IPN route calls `validateOrder` internally before invoking `onIpn`. You do
+  not need to validate again inside the callback — the data passed to it has
   already been confirmed with SSLCommerz.
 </Warning>
 
@@ -145,7 +146,9 @@ sslcommerz.registerRoutes(http, {
 sslcommerz.registerRoutes(http, {
   onCancel: async (ctx, session) => {
     if (!session) return;
-    await ctx.runMutation(api.orders.markAsCancelled, { tranId: session.tranId });
+    await ctx.runMutation(api.orders.markAsCancelled, {
+      tranId: session.tranId,
+    });
   },
 });
 ```
@@ -162,12 +165,13 @@ If you prefer not to use the `SslCommerzConvex` class, the standalone `registerR
 
 ```ts
 import { registerRoutes } from "@better-sslcommerz/convex";
+
 import { components } from "./_generated/api";
 
 registerRoutes(
   http,
   components.sslcommerz,
-  routesConfig,    // RegisterRoutesConfig — optional
+  routesConfig, // RegisterRoutesConfig — optional
   componentConfig, // SslCommerzComponentConfig — optional
 );
 ```
