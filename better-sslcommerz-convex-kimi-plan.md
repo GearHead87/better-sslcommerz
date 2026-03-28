@@ -1,4 +1,4 @@
-# better-sslcommerz Convex Component — Detailed Plan
+# @better-sslcommerz/sdk Convex Component — Detailed Plan
 
 **Date:** 2026-03-25  
 **Goal:** Create `@convex-dev/better-sslcommerz` — a first-class Convex component for SSLCommerz payment gateway integration, modeled exactly after `@convex-dev/stripe` and `@convex-dev/polar`.
@@ -9,7 +9,7 @@
 
 1. [Reference Repo Deep Analysis — `@convex-dev/stripe`](#1-reference-repo-deep-analysis--convex-devstripe)
 2. [Reference Repo Deep Analysis — `@convex-dev/polar`](#2-reference-repo-deep-analysis--convex-devpolar)
-3. [Current Package Analysis — `better-sslcommerz`](#3-current-package-analysis--better-sslcommerz)
+3. [Current Package Analysis — `@better-sslcommerz/sdk`](#3-current-package-analysis--better-sslcommerz)
 4. [Current Package Analysis — `@better-sslcommerz/validators`](#4-current-package-analysis--better-sslcommerzvalidators)
 5. [Package Reuse Analysis — Can We Reuse the Current Package?](#5-package-reuse-analysis--can-we-reuse-the-current-package)
 6. [Convex Component Architecture Primer](#6-convex-component-architecture-primer)
@@ -453,10 +453,10 @@ Two fully-featured React components:
 
 ---
 
-## 3. Current Package Analysis — `better-sslcommerz`
+## 3. Current Package Analysis — `@better-sslcommerz/sdk`
 
 **Location:** `packages/better-sslcommerz/`  
-**npm name:** `better-sslcommerz` (no scope)  
+**npm name:** `@better-sslcommerz/sdk` (no scope)  
 **Version:** 0.0.0 (pre-release)
 
 ### 3.1 Source Structure
@@ -586,7 +586,7 @@ formatType                        // "json"|"xml"|undefined
 
 ### 4.3 Schema Coverage
 
-The validators package covers every SSLCommerz API endpoint that the `better-sslcommerz` package uses. The schemas include both **request** schemas (with `store_id` and `store_passwd` auth fields) and **response** schemas.
+The validators package covers every SSLCommerz API endpoint that the `@better-sslcommerz/sdk` package uses. The schemas include both **request** schemas (with `store_id` and `store_passwd` auth fields) and **response** schemas.
 
 ### 4.4 Package Export Pattern (packages/validators/package.json:5-10)
 
@@ -609,11 +609,11 @@ Uses source-first export (`./src/index.ts` as default) — TypeScript resolves i
 
 This is the critical question. Two tracks:
 
-### Track A: Reuse `better-sslcommerz` as an npm Dependency
+### Track A: Reuse `@better-sslcommerz/sdk` as an npm Dependency
 
 **Feasibility: YES — RECOMMENDED**
 
-The Convex component `@convex-dev/better-sslcommerz` needs to make HTTP calls to SSLCommerz's API from within Convex actions. The existing `better-sslcommerz` package already provides:
+The Convex component `@convex-dev/better-sslcommerz` needs to make HTTP calls to SSLCommerz's API from within Convex actions. The existing `@better-sslcommerz/sdk` package already provides:
 
 1. **`createSslcommerzClient()`** — accepts a custom `fetch` function, which Convex actions support natively
 2. **All HTTP transport logic** — timeout handling, AbortSignal, URLSearchParams encoding, error handling
@@ -625,7 +625,7 @@ The Convex component `@convex-dev/better-sslcommerz` needs to make HTTP calls to
 
 ```typescript
 // Inside a Convex action (runs in Node.js-compatible V8 runtime)
-import { createSslcommerzClient } from "better-sslcommerz";
+import { createSslcommerzClient } from "@better-sslcommerz/sdk";
 
 const client = createSslcommerzClient({
   storeId: process.env.SSLCOMMERZ_STORE_ID!,
@@ -642,7 +642,7 @@ const session = await client.core.createSession({ ... });
 ```json
 {
   "dependencies": {
-    "better-sslcommerz": "^0.1.0" // once published
+    "@better-sslcommerz/sdk": "^0.1.0" // once published
   }
 }
 ```
@@ -652,15 +652,15 @@ const session = await client.core.createSession({ ... });
 - No need to re-implement HTTP transport
 - No need to re-implement Zod schemas
 - No need to re-implement TypeScript types
-- The validators package does NOT need to be published separately — `better-sslcommerz` already re-exports everything
+- The validators package does NOT need to be published separately — `@better-sslcommerz/sdk` already re-exports everything
 
 **Limitations / Caveats:**
 
-1. `better-sslcommerz` is currently version `0.0.0`. It must be published to npm BEFORE building the Convex component.
-2. The Convex component cannot import from the local workspace package `better-sslcommerz` directly (the component will be its own standalone project, not part of the monorepo when consumed by users). It must reference the published npm package.
+1. `@better-sslcommerz/sdk` is currently version `0.0.0`. It must be published to npm BEFORE building the Convex component.
+2. The Convex component cannot import from the local workspace package `@better-sslcommerz/sdk` directly (the component will be its own standalone project, not part of the monorepo when consumed by users). It must reference the published npm package.
 3. During development, you can use `file:../../packages/better-sslcommerz` or `npm link` for local testing.
 
-**Verdict: Reuse `better-sslcommerz` as a dependency. It eliminates rewriting ~500 lines of HTTP/validation code.**
+**Verdict: Reuse `@better-sslcommerz/sdk` as a dependency. It eliminates rewriting ~500 lines of HTTP/validation code.**
 
 ### Track B: Reuse `@better-sslcommerz/validators` Directly
 
@@ -672,9 +672,9 @@ The validators package is `"private": true` and lives in the monorepo. The Conve
 
 1. **Publish validators to npm** — Remove `"private": true`, give it a proper version, publish as `@better-sslcommerz/validators`. Then the Convex component can depend on it. This also means the validators package needs a build step that produces a proper dist.
 2. **Vendor/copy the schemas** — Copy the validator schemas into the Convex component package under `src/validators/`. Full duplication, but complete isolation.
-3. **Use `better-sslcommerz`** — Which already re-exports all validators. This is Track A.
+3. **Use `@better-sslcommerz/sdk`** — Which already re-exports all validators. This is Track A.
 
-**Verdict: Track B is not needed because Track A (using `better-sslcommerz`) already brings in all the validators.**
+**Verdict: Track B is not needed because Track A (using `@better-sslcommerz/sdk`) already brings in all the validators.**
 
 ### Track C: The Convex-Specific Validators (NEW REQUIREMENT)
 
@@ -1043,7 +1043,7 @@ The main `SslCommerzConvex` class:
 
 ```typescript
 import type { HttpRouter } from "convex/server";
-import { createSslcommerzClient } from "better-sslcommerz";
+import { createSslcommerzClient } from "@better-sslcommerz/sdk";
 import { httpActionGeneric } from "convex/server";
 
 import type { ComponentApi } from "../component/_generated/component.js";
@@ -1280,7 +1280,7 @@ export function registerRoutes(
 ### 8.6 `src/client/types.ts`
 
 ```typescript
-import type { IpnPayload } from "better-sslcommerz";
+import type { IpnPayload } from "@better-sslcommerz/sdk";
 import type { ActionCtx, HttpRouter, MutationCtx } from "convex/server";
 
 export type RunQueryCtx = {
@@ -1471,7 +1471,7 @@ export { default as schema } from "./component/schema.js";
     "react": { "optional": true }
   },
   "dependencies": {
-    "better-sslcommerz": "^0.1.0"
+    "@better-sslcommerz/sdk": "^0.1.0"
   },
   "devDependencies": {
     "@convex-dev/eslint-plugin": "1.1.1",
@@ -1551,9 +1551,9 @@ Identical to stripe/polar's build config:
 }
 ```
 
-### 10.3 Key TypeScript differences from current `better-sslcommerz` package
+### 10.3 Key TypeScript differences from current `@better-sslcommerz/sdk` package
 
-| Aspect            | Current `better-sslcommerz`       | New Convex Component                                                |
+| Aspect            | Current `@better-sslcommerz/sdk`       | New Convex Component                                                |
 | ----------------- | --------------------------------- | ------------------------------------------------------------------- |
 | Bundler           | `tsdown` (bundles to single file) | `tsc` only (preserves module structure)                             |
 | Output formats    | ESM + CJS                         | ESM only                                                            |
@@ -1670,7 +1670,7 @@ dist/
 25. **Write `README.md`** — installation, setup, usage examples
 26. **Write `CONTRIBUTING.md`** — how to develop/test/publish
 27. **Write `CHANGELOG.md`** — initial entry
-28. **Publish `better-sslcommerz`** to npm (the dependency)
+28. **Publish `@better-sslcommerz/sdk`** to npm (the dependency)
 29. **Publish `@convex-dev/better-sslcommerz`** to npm
 
 ---
@@ -1681,7 +1681,7 @@ dist/
 
 ```
 packages/
-├── better-sslcommerz/         # existing HTTP client (must publish to npm first)
+├── @better-sslcommerz/sdk/         # existing HTTP client (must publish to npm first)
 ├── validators/                # existing validators (stays private/workspace-only)
 └── convex-better-sslcommerz/  # NEW Convex component
 ```
@@ -1719,18 +1719,18 @@ The `_generated/` directory inside the component IS committed because it contain
 
 ```
 @convex-dev/better-sslcommerz  (new)
-  └── better-sslcommerz         (published npm — depends on)
-        └── @better-sslcommerz/validators  (private workspace — bundled into better-sslcommerz dist)
+  └── @better-sslcommerz/sdk         (published npm — depends on)
+        └── @better-sslcommerz/validators  (private workspace — bundled into @better-sslcommerz/sdk dist)
 ```
 
-**Critical step:** Before the Convex component can be developed/tested properly, `better-sslcommerz` must be published to npm or available via `npm link` / `file:` reference.
+**Critical step:** Before the Convex component can be developed/tested properly, `@better-sslcommerz/sdk` must be published to npm or available via `npm link` / `file:` reference.
 
 For local development:
 
 ```json
 {
   "dependencies": {
-    "better-sslcommerz": "file:../../packages/better-sslcommerz"
+    "@better-sslcommerz/sdk": "file:../../packages/better-sslcommerz"
   }
 }
 ```
@@ -1740,19 +1740,19 @@ For production:
 ```json
 {
   "dependencies": {
-    "better-sslcommerz": "^0.1.0"
+    "@better-sslcommerz/sdk": "^0.1.0"
   }
 }
 ```
 
 ### 13.6 Version Coordination
 
-Since the Convex component depends on `better-sslcommerz`, they need coordinated versioning. Recommendation:
+Since the Convex component depends on `@better-sslcommerz/sdk`, they need coordinated versioning. Recommendation:
 
-- Publish `better-sslcommerz@0.1.0` first
+- Publish `@better-sslcommerz/sdk@0.1.0` first
 - `@convex-dev/better-sslcommerz` starts at `0.1.0` independently
 - The dependency range should be `"^0.1.0"` (semver compatible)
-- Breaking changes in `better-sslcommerz` may require a bump in the Convex component's peer dep range
+- Breaking changes in `@better-sslcommerz/sdk` may require a bump in the Convex component's peer dep range
 
 ---
 

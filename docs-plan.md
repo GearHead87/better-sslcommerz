@@ -71,20 +71,20 @@ Reference
 ### 1. `/` — Introduction
 
 **Summary:**  
-High-level overview of `better-sslcommerz`. What the package is, what problems it solves,
+High-level overview of `@better-sslcommerz/sdk`. What the package is, what problems it solves,
 and what makes it different from raw API calls.
 
 **Content:**
 
 - What is SSLCommerz (1 sentence context)
-- What `better-sslcommerz` provides:
+- What `@better-sslcommerz/sdk` provides:
   - Type-safe client built with TypeScript
   - Zod-validated request/response schemas (via `@better-sslcommerz/validators`)
   - First-class support for both sandbox and live environments
   - Two API namespaces: `client.core` and `client.invoice`
   - Built-in IPN payload parser (`core.parseIpnPayload`)
   - Three error classes: `SslcommerzError`, `SslcommerzHttpError`, `SslcommerzValidationError`
-- Package name: `better-sslcommerz`
+- Package name: `@better-sslcommerz/sdk`
 - Quick navigation cards to Getting Started and Core API
 
 ---
@@ -96,11 +96,11 @@ End-to-end minimal working example: install, create client, call `createSession`
 
 **Content:**
 
-- Install: `npm install better-sslcommerz` / `pnpm add better-sslcommerz`
+- Install: `npm install @better-sslcommerz/sdk` / `pnpm add @better-sslcommerz/sdk`
 - Environment variables: `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWD`
 - Create client (sandbox vs live):
   ```ts
-  import { createSslcommerzClient } from "better-sslcommerz";
+  import { createSslcommerzClient } from "@better-sslcommerz/sdk";
 
   const client = createSslcommerzClient({
     storeId: process.env.SSLCOMMERZ_STORE_ID!,
@@ -346,7 +346,7 @@ All exported types, where they come from, and how to import them.
 
 **Content:**
 
-- All types are re-exported from `better-sslcommerz` (originally from `@better-sslcommerz/validators`)
+- All types are re-exported from `@better-sslcommerz/sdk` (originally from `@better-sslcommerz/validators`)
 - Input types (omit `store_id`/`store_passwd` — injected by client):
   - `CreateSessionInput`
   - `ValidateOrderInput`
@@ -380,7 +380,7 @@ All exported types, where they come from, and how to import them.
     CreateSessionResponse,
     IpnPayload,
     SslcommerzClient,
-  } from "better-sslcommerz";
+  } from "@better-sslcommerz/sdk";
   ```
 
 ---
@@ -391,5 +391,5 @@ All exported types, where they come from, and how to import them.
 - Pages in subdirectories: `core/create-session/page.mdx`, `invoice/create-invoice/page.mdx`, etc.
 - `site-config.ts` needs to be updated with all new nav groups and links
 - Existing pages (`/` and `/getting-started`) are replaced/rewritten — not extended
-- Code examples should use `better-sslcommerz` (the public package name, not workspace alias)
+- Code examples should use `@better-sslcommerz/sdk` (the public package name, not workspace alias)
 - All examples assume Next.js App Router (server components / route handlers)

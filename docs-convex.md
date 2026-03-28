@@ -6,7 +6,7 @@ The `@better-sslcommerz/convex` package is a Convex component that persists SSLC
 data (sessions, transactions, refunds, invoices, IPN events) into a Convex database and registers
 HTTP route handlers for gateway callbacks.
 
-The existing docs cover only the vanilla `better-sslcommerz` SDK. These new pages document the
+The existing docs cover only the vanilla `@better-sslcommerz/sdk` SDK. These new pages document the
 Convex component for developers who want to add it to their Convex application.
 
 Style reference: `demo-project/polar/README.md` and `demo-project/stripe/README.md`.
@@ -51,7 +51,7 @@ What to cover:
   - Query helpers to read stored payment data from any Convex function.
   - Automatic upsert — every gateway call syncs the relevant records.
   - Typed with TypeScript; works with `convex-test` for unit testing.
-- Prerequisites: an existing Convex project (`convex ^1.31.6`), a `better-sslcommerz` client, and
+- Prerequisites: an existing Convex project (`convex ^1.31.6`), a `@better-sslcommerz/sdk` client, and
   SSLCommerz store credentials.
 - Short teaser code block showing the constructor and `registerRoutes` call (lifted from the polar
   README pattern).

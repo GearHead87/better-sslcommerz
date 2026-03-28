@@ -1,4 +1,4 @@
-# better-sslcommerz
+# @better-sslcommerz/sdk
 
 <p align="center">
   <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>

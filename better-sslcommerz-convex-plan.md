@@ -1,4 +1,4 @@
-# better-sslcommerz Convex Component Plan
+# @better-sslcommerz/sdk Convex Component Plan
 
 ## What I analyzed
 
@@ -284,7 +284,7 @@ If your Convex component will be published publicly, validators packaging strate
 
 ---
 
-## Reuse opinion: can current `better-sslcommerz` package be reused?
+## Reuse opinion: can current `@better-sslcommerz/sdk` package be reused?
 
 Short answer: **Yes, partially and effectively**, with conditions.
 
@@ -487,7 +487,7 @@ And component public queries for dashboard/internal app usage:
 
 1. Create package scaffold `packages/better-sslcommerz-convex` following Stripe/Polar layout.
 2. Build component internals (`schema.ts`, `public.ts`, `private.ts`) focused on persistence and querying.
-3. Build client wrapper class that internally uses `createSslcommerzClient(...)` from `better-sslcommerz`.
+3. Build client wrapper class that internally uses `createSslcommerzClient(...)` from `@better-sslcommerz/sdk`.
 4. Implement `registerRoutes` for IPN endpoint:
    - parse with validator
    - persist IPN event
@@ -499,7 +499,7 @@ And component public queries for dashboard/internal app usage:
 
 ### Risks
 
-- Dependency coupling to `better-sslcommerz` release cadence.
+- Dependency coupling to `@better-sslcommerz/sdk` release cadence.
 
 ---
 
@@ -508,7 +508,7 @@ And component public queries for dashboard/internal app usage:
 ### Why you might choose this
 
 - Full independence for package distribution.
-- No runtime dependency on `better-sslcommerz`.
+- No runtime dependency on `@better-sslcommerz/sdk`.
 
 ### Implementation steps
 
@@ -612,7 +612,7 @@ Deliverables:
 ## Immediate next execution plan (practical)
 
 1. Create `packages/better-sslcommerz-convex` using Stripe/Polar package skeleton.
-2. Implement Track A first (reuse `better-sslcommerz` runtime client + validators).
+2. Implement Track A first (reuse `@better-sslcommerz/sdk` runtime client + validators).
 3. Add minimal v1 component tables (`sessions`, `transactions`, `refunds`, `invoices`, `ipn_events`).
 4. Add class methods with same method names as current SDK for easy adoption.
 5. Add `registerRoutes` + custom event hooks.
@@ -628,6 +628,6 @@ Use **Track A now** for speed and stability, but structure code so Track B remai
 That means:
 
 - Rebuild Convex layer as a real component package (like Stripe/Polar).
-- Reuse existing validated endpoint runtime from `better-sslcommerz`.
+- Reuse existing validated endpoint runtime from `@better-sslcommerz/sdk`.
 - Reuse `@better-sslcommerz/validators` as shared schema contract.
 - Plan one later step to make validators publish-safe if this component is meant for public npm.

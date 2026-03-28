@@ -1,4 +1,4 @@
-# better-sslcommerz Plan
+# @better-sslcommerz/sdk Plan
 
 ## Goals
 
@@ -31,13 +31,13 @@ We will implement **General + Invoice** first since they share the same base URL
   - Owns all Zod schemas and exported TypeScript types.
   - Exposes request/response schemas per endpoint.
   - Exposes shared primitives (money, currency, tran_id, date-time, etc.).
-- `better-sslcommerz`
+- `@better-sslcommerz/sdk`
   - Lightweight HTTP client + endpoint wrappers.
   - Uses validators to parse and validate inputs (and optionally responses).
   - Environment config (sandbox vs live) and base URL resolver.
   - Exposes a single public client with namespaced methods.
 
-### Proposed Package Structure (better-sslcommerz)
+### Proposed Package Structure (@better-sslcommerz/sdk)
 
 - `src/`
   - `index.ts` (public exports)
@@ -78,7 +78,7 @@ We will implement **General + Invoice** first since they share the same base URL
   - Response validation is optional but available via `{ validateResponse: true }`.
 - **Type exports**:
   - From validators: `type CreateSessionInput`, `CreateSessionResponse`, etc.
-  - Re-export in better-sslcommerz for convenience.
+  - Re-export in @better-sslcommerz/sdk for convenience.
 - **Future-proofing**: maintain endpoint namespaces so new categories can be added without breaking.
 
 ## Implementation Plan
@@ -124,7 +124,7 @@ We will implement **General + Invoice** first since they share the same base URL
 ## Public API Sketch
 
 ```ts
-import { createSslcommerzClient } from "better-sslcommerz";
+import { createSslcommerzClient } from "@better-sslcommerz/sdk";
 
 const sslcz = createSslcommerzClient({
   storeId: "",

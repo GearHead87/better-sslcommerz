@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [6d1398c]
-  - better-sslcommerz@0.1.0
+  - @better-sslcommerz/sdk@0.1.0

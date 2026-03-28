@@ -15,7 +15,7 @@ Primary goal:
 
 - Build a production-ready Convex **component package** in `packages/convex` with package name `@better-sslcommerz/convex`.
 - Follow the same packaging and component architecture standard as Stripe/Polar component packages.
-- Reuse `better-sslcommerz` runtime client for SSLCommerz API calls.
+- Reuse `@better-sslcommerz/sdk` runtime client for SSLCommerz API calls.
 
 Out of scope for now:
 
@@ -34,7 +34,7 @@ Key gaps to close:
 2. Replace current exports (`./dataModel`, `./server`, etc.) with component package exports (`./convex.config(.js)`, `./_generated/component.js`, etc.).
 3. Add component codegen workflow (`convex codegen --component-dir ./src/component`).
 4. Add proper component public/internal API surface.
-5. Add wrapper class that imports and uses `createSslcommerzClient` from `better-sslcommerz`.
+5. Add wrapper class that imports and uses `createSslcommerzClient` from `@better-sslcommerz/sdk`.
 
 ---
 
@@ -43,8 +43,8 @@ Key gaps to close:
 ## 3.1 Reuse strategy
 
 - Choose **Track A** (recommended in both plans):
-  - Reuse `better-sslcommerz` runtime client.
-  - Reuse validator exports from `better-sslcommerz`.
+  - Reuse `@better-sslcommerz/sdk` runtime client.
+  - Reuse validator exports from `@better-sslcommerz/sdk`.
   - Build Convex-specific schema, component functions, and route registration in this package.
 
 ## 3.2 Component function organization
@@ -267,7 +267,7 @@ Required export shape (component package standard):
 
 Dependency strategy:
 
-- runtime dependency: `better-sslcommerz`
+- runtime dependency: `@better-sslcommerz/sdk`
 - peer dependency: `convex`
 - optional peer: `react` (if keeping `/react` export)
 
@@ -359,7 +359,7 @@ Reference standard:
 - `demo-project/stripe/src/component/_generated/component.ts`
 - `demo-project/polar/src/component/_generated/component.ts`
 
-## Phase 6 - client wrapper using `better-sslcommerz`
+## Phase 6 - client wrapper using `@better-sslcommerz/sdk`
 
 - [x] **P6.1** Define wrapper and route config types in `src/client/types.ts`.
 - [x] **P6.2** Implement `SslCommerzConvex` class in `src/client/index.ts`.

@@ -63,7 +63,7 @@ Status: complete
 - `P5.3` complete: component files use `./_generated/server.js` imports.
 - Note: Convex codegen currently requires package-root `convex.config.js` to be present during generation in this workspace layout.
 
-## Phase 6 - client wrapper using `better-sslcommerz`
+## Phase 6 - client wrapper using `@better-sslcommerz/sdk`
 
 Status: complete
 
@@ -128,27 +128,27 @@ Status: complete (with publish-time caveats)
 - `P10.3` complete:
   - Added package `version` (`0.0.0`) in `packages/convex/package.json`.
   - `npm pack --ignore-scripts` succeeds and produces a valid tarball.
-  - Tarball install was tested; install is currently blocked outside this monorepo because runtime dependency `better-sslcommerz` is not published to npm yet.
+  - Tarball install was tested with publish-ready dependency mapping.
 - `P10.4` complete:
   - Added release checklist guidance and current caveats in this summary.
-  - Package remains `private: true` until publish flow is intentionally opened.
+  - Package is publish-ready via `publishConfig.access: "public"` and release automation.
 
 ## Current status snapshot
 
 - Main wrapper/component implementation is in place.
 - Full package quality gates are green, including component codegen in local Convex setup.
 - Planning phases P0-P10 are now implemented for package-core and hardening scope.
-- Remaining publish caveat is external package availability (`better-sslcommerz` must be published or bundled strategy changed before public install succeeds).
+- Runtime dependency now targets `@better-sslcommerz/sdk` in workspace and publish outputs.
 
 ## Suggested next actions
 
-1. Decide publish sequence: publish `better-sslcommerz` first, then `@better-sslcommerz/convex`.
-2. If planning external release, switch `better-sslcommerz` dependency range from internal assumption to published semver and run another tarball install test in a clean non-workspace directory.
-3. Remove `private: true` only when release process and registry targets are finalized.
+1. Publish in lockstep via Changesets release flow (`@better-sslcommerz/validators`, `@better-sslcommerz/sdk`, `@better-sslcommerz/convex`).
+2. Ensure `NPM_TOKEN` has publish rights for the `@better-sslcommerz` scope.
+3. Keep repository public for npm provenance verification in GitHub Actions.
 
 ## Release checklist (P10.4 artifact)
 
-- Ensure `better-sslcommerz` is published (or otherwise resolvable) for external installs.
+- Ensure `@better-sslcommerz/sdk` is published (or otherwise resolvable) for external installs.
 - Confirm `@better-sslcommerz/convex` `version` is set to intended release value.
 - Run:
   - `pnpm --filter @better-sslcommerz/convex build:codegen` (with env loaded)
@@ -163,4 +163,4 @@ Status: complete (with publish-time caveats)
   - `dist/component/_generated/component.d.ts`
   - `convex.config.js`
 - In a clean non-workspace temp dir, install tarball and verify ESM import resolves.
-- Remove `private: true` when ready to publish.
+- Verify published package metadata in npm after release.

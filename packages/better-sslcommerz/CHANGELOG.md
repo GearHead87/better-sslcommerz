@@ -1,4 +1,4 @@
-# better-sslcommerz
+# @better-sslcommerz/sdk
 
 ## 0.1.0
 
