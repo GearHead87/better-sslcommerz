@@ -1,18 +1,30 @@
 {
   "name": "@better-sslcommerz/validators",
-  "private": true,
+  "version": "0.0.0",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     }
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsdown && tsc -p tsconfig.build.json",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "tsc",
+    "dev": "tsdown --no-clean",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
@@ -26,6 +38,7 @@
     "@better-sslcommerz/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "tsdown": "0.14.1",
     "typescript": "catalog:"
   },
   "prettier": "@better-sslcommerz/prettier-config"

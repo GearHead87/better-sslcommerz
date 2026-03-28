@@ -35,7 +35,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-sslcommerz/validators": "workspace:*"
+    "@better-sslcommerz/validators": "workspace:^"
   },
   "devDependencies": {
     "@better-sslcommerz/eslint-config": "workspace:*",

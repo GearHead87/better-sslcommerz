@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@better-sslcommerz/validators",
+      "better-sslcommerz",
+      "@better-sslcommerz/convex"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@better-sslcommerz/github",
+    "@better-sslcommerz/docs",
+    "with-nextjs",
+    "with-nextjs-convex",
+    "@better-sslcommerz/eslint-config",
+    "@better-sslcommerz/prettier-config",
+    "@better-sslcommerz/tailwind-config",
+    "@better-sslcommerz/tsconfig"
+  ]
+}

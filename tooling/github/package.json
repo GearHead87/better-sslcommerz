@@ -1,3 +1,5 @@
 {
-  "name": "@better-sslcommerz/github"
+  "name": "@better-sslcommerz/github",
+  "version": "0.0.0",
+  "private": true
 }
