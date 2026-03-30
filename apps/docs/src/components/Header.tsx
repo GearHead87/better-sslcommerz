@@ -1,5 +1,4 @@
 import { forwardRef, use } from "react";
-import { Button } from "@/components/Button";
 import { LogoBlob, LogoText } from "@/components/Logo";
 import {
   IsInsideMobileNavigationContext,
@@ -88,9 +87,6 @@ export const Header = forwardRef<
         <div className="flex gap-4">
           <MobileSearch />
           <ThemeToggle />
-        </div>
-        <div className="hidden min-[450px]:contents">
-          <Button href="https://uploadthing.com/dashboard">Dashboard</Button>
         </div>
       </div>
     </motion.div>
