@@ -5,7 +5,7 @@
   <a href="https://github.com/GearHead87/better-sslcommerz/actions/workflows/ci.yml"><img alt="CI status" src="https://img.shields.io/github/actions/workflow/status/GearHead87/better-sslcommerz/ci.yml?style=flat-square&branch=main&label=ci" /></a>
 </p>
 
-<p align="center">
+<!-- <p align="center">
   <a href="https://opencode.ai">
     <picture>
       <source srcset="packages/console/app/src/asset/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
@@ -13,7 +13,7 @@
       <img src="packages/console/app/src/asset/logo-ornate-light.svg" alt="OpenCode logo">
     </picture>
   </a>
-</p>
+</p> -->
 
 <p align="center"><strong>Production-ready TypeScript SDK for SSLCommerz payments, refunds, transaction queries, and invoices.</strong></p>
 
