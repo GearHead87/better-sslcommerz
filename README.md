@@ -69,6 +69,8 @@ console.log(session.GatewayPageURL);
 - Configurable timeout, custom `fetch`, and per-request abort support.
 - Structured errors: `SslcommerzError`, `SslcommerzHttpError`, `SslcommerzValidationError`.
 
+Package docs: `packages/better-sslcommerz/README.md`
+
 ## Packages in this monorepo
 
 - `packages/better-sslcommerz` - main published SDK package.
