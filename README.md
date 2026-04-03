@@ -72,8 +72,26 @@ console.log(session.GatewayPageURL);
 ## Packages in this monorepo
 
 - `packages/better-sslcommerz` - main published SDK package.
+- `packages/convex` - Convex component package with payment workflows, callback routes, and data persistence.
 - `packages/validators` - shared Zod schemas and TypeScript models.
 - `apps/docs` - documentation site with full API usage guides.
+
+## Convex package
+
+`@better-sslcommerz/convex` is the Convex-first integration package for SSLCommerz.
+It wraps `@better-sslcommerz/sdk` and adds:
+
+- Convex actions/queries friendly APIs for payment, refund, transaction, and invoice flows.
+- Automatic persistence for sessions, transactions, refunds, invoices, and IPN events.
+- Route registration helpers for `POST /sslcommerz/ipn`, `/success`, `/fail`, and `/cancel`.
+
+Install:
+
+```bash
+npm install @better-sslcommerz/convex
+```
+
+Package docs: `packages/convex/README.md`
 
 ## Docs
 
