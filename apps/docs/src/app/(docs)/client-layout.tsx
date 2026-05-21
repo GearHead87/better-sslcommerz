@@ -23,8 +23,8 @@ const PreviewBanner = (props: {
       transition={{ duration: 0.5 }}
       initial={{ opacity: 0 }}
     >
-      <div className="pointer-events-auto flex items-center justify-between gap-x-6 bg-gradient-to-r from-[#f36b6b] to-[#b85757] px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5 dark:from-[#8f4545] dark:to-[#4e2525]">
-        <p className="text-sm leading-6 text-zinc-900 dark:text-zinc-50">
+      <div className="pointer-events-auto flex items-center justify-between gap-x-6 bg-gradient-to-r from-[#0173D3] to-[#295CAB] px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5 dark:from-[#0173D3]/80 dark:to-[#295CAB]/80">
+        <p className="text-sm leading-6 text-white dark:text-zinc-50">
           <a
             href="https://v6.docs.uploadthing.com"
             target="_blank"
@@ -51,7 +51,7 @@ const PreviewBanner = (props: {
           <span className="sr-only">Dismiss</span>
           <XMarkIcon
             aria-hidden="true"
-            className="size-5 text-zinc-900 dark:text-zinc-50"
+            className="size-5 text-white dark:text-zinc-50"
           />
         </button>
       </div>
@@ -75,7 +75,7 @@ export function Layout({
           layoutScroll
           className="contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex"
         >
-          <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-r lg:border-zinc-900/10 lg:px-6 lg:pb-8 lg:pt-4 xl:w-80 lg:dark:border-white/10">
+          <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-r lg:border-zinc-900/10 lg:bg-white/30 lg:px-6 lg:pb-8 lg:pt-4 xl:w-80 lg:dark:border-white/10 lg:dark:bg-white/[0.02]">
             <div className="hidden lg:flex">
               <Link
                 href="/"

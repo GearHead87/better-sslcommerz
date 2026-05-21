@@ -26,7 +26,7 @@ function TopLevelNavItem({
         {...(href.startsWith("http")
           ? { target: "_blank", rel: "noopener" }
           : {})}
-        className="text-sm leading-5 text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+        className="text-sm leading-5 text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
       >
         {children}
       </Link>
@@ -56,8 +56,8 @@ export const Header = forwardRef<
         !isInsideMobileNavigation &&
           "backdrop-blur-sm lg:left-72 xl:left-80 dark:backdrop-blur",
         isInsideMobileNavigation
-          ? "bg-white dark:bg-zinc-900"
-          : "bg-white/[var(--bg-opacity-light)] dark:bg-zinc-900/[var(--bg-opacity-dark)]",
+          ? "bg-white dark:bg-[#0a1220]"
+          : "bg-white/[var(--bg-opacity-light)] dark:bg-[#0a1220]/[var(--bg-opacity-dark)]",
       )}
       style={
         {

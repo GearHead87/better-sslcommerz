@@ -50,7 +50,7 @@ const valueColorMap = {
 export function Tag({
   children,
   variant = "medium",
-  color = valueColorMap[children] ?? "red",
+  color = valueColorMap[children] ?? "sky",
   className,
 }: {
   children: string;

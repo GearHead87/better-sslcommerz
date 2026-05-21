@@ -99,14 +99,32 @@
 }
 
 :root {
-  --theme-color-accent: rgb(248 113 113);
-  --theme-color-background: hsla(348, 71%, 93%, 1);
+  /* SSLCOMMERZ action blue accent #0173D3 -> rgb(1 115 211) */
+  --theme-color-accent: rgb(1 115 211);
+  --theme-color-background: hsla(210, 100%, 96%, 1);
   --scalar-api-client-color: var(--theme-color-accent);
-  --scalar-background-1: hsla(241.9, 6.3926%, 10.038%) !important;
+  --scalar-background-1: hsla(218, 35%, 8%, 1) !important;
 }
 
 .dark-mode {
-  --scalar-background-1: hsla(241.9, 6.3926%, 10.038%) !important;
-  --scalar-color-accent: rgb(248 113 113) !important;
-  --scalar-color-background: hsla(348, 24%, 12%, 1) !important;
+  --scalar-background-1: hsla(218, 35%, 8%, 1) !important;
+  --scalar-color-accent: rgb(56 158 248) !important;
+  --scalar-color-background: hsla(218, 38%, 10%, 1) !important;
+}
+
+/* Dark theme: deeper navy-tinted background for the docs body */
+html.dark body {
+  background-color: #0a1220;
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      rgba(41, 92, 171, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 0%,
+      rgba(1, 115, 211, 0.10),
+      transparent 60%
+    );
+  background-attachment: fixed;
 }

@@ -25,8 +25,27 @@ export default {
     },
     typography: typographyStyles,
     extend: {
+      colors: {
+        // SSLCOMMERZ brand palette (from docs/design.md)
+        brand: {
+          DEFAULT: "#295CAB",
+          deep: "#2259A7",
+          soft: "#5E7DB1",
+        },
+        action: {
+          DEFAULT: "#0173D3",
+          tint: "#ECF6FF",
+        },
+      },
+      backgroundImage: {
+        "brand-gradient":
+          "linear-gradient(135deg, #295CAB 0%, #0173D3 100%)",
+        "brand-gradient-dark":
+          "linear-gradient(135deg, rgba(41,92,171,0.25) 0%, rgba(1,115,211,0.15) 100%)",
+      },
       boxShadow: {
         glow: "0 0 4px rgb(0 0 0 / 0.1)",
+        "brand-glow": "0 0 24px rgba(1, 115, 211, 0.35)",
       },
       maxWidth: {
         lg: "33rem",

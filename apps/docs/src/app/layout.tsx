@@ -20,7 +20,7 @@ export default function RootLayout(
   return (
     <ViewTransitions>
       <html lang="en" className="h-full" suppressHydrationWarning>
-        <body className="flex min-h-full bg-white antialiased dark:bg-zinc-900">
+        <body className="flex min-h-full bg-white antialiased dark:bg-[#0a1220]">
           <Providers>{props.children}</Providers>
         </body>
       </html>

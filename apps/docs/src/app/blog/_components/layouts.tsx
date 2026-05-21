@@ -53,7 +53,7 @@ export function ArticlesLayout({
       <div className="h-full w-full">
         <div className="fixed z-50 contents h-14 lg:pointer-events-auto lg:block lg:overflow-y-auto">
           <motion.div
-            className="hidden h-full items-center border-b border-zinc-900/10 bg-white/[--bg-opacity-light] backdrop-blur-sm transition lg:flex lg:w-72 lg:px-6 xl:w-80 dark:border-white/10 dark:bg-zinc-900/[--bg-opacity-dark] dark:backdrop-blur"
+            className="hidden h-full items-center border-b border-zinc-900/10 bg-white/[--bg-opacity-light] backdrop-blur-sm transition lg:flex lg:w-72 lg:px-6 xl:w-80 dark:border-white/10 dark:bg-[#0a1220]/[--bg-opacity-dark] dark:backdrop-blur"
             style={
               {
                 "--bg-opacity-light": bgOpacityLight,
@@ -106,7 +106,7 @@ export function ArticleLayout({
                   type="button"
                   onClick={() => router.push(previousPathname ?? "/blog")}
                   aria-label="Go back to articles"
-                  className="group flex size-8 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20"
+                  className="group flex size-8 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-white/10 dark:bg-white/[0.04] dark:ring-0 dark:ring-white/10 dark:hover:border-white/20 dark:hover:ring-white/20"
                 >
                   <ArrowLeftIcon className="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400" />
                 </button>
